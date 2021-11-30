@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="QRBee.Views.MainPage">
+    <ContentPage.Content>
+        <StackLayout>
+            <!-- <Label Text="Hello this is a test page." -->
+            <!--     VerticalOptions="CenterAndExpand"  -->
+            <!--     HorizontalOptions="CenterAndExpand" /> -->
+            <Entry x:Name="QrCodeScanner"  Placeholder="Text to scan"/>
+            <Button  Text="Scan me" HorizontalOptions="Center" BackgroundColor="Aqua" TextColor="Red" Clicked="OnButtonClicked"/>
+
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>
