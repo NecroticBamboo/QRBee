@@ -1,15 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<TabbedPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:views="clr-namespace:QRBee.Views;assembly=QRBee"
              x:Class="QRBee.Views.MainPage">
-    <ContentPage.Content>
-        <StackLayout>
-            <!-- <Label Text="Hello this is a test page." -->
-            <!--     VerticalOptions="CenterAndExpand"  -->
-            <!--     HorizontalOptions="CenterAndExpand" /> -->
-            <Entry x:Name="QrCodeScanner"  Placeholder="Text to scan"/>
-            <Button  Text="Scan me" HorizontalOptions="Center" BackgroundColor="Aqua" TextColor="Red" Clicked="OnButtonClicked"/>
+  <!--Pages can be added as references or inline-->
+  <TabbedPage.Children>
+        <views:ClientPage Title="Client"/>
+        <views:MerchantPage Title="Merchant"/>
+  </TabbedPage.Children>
 
-        </StackLayout>
-    </ContentPage.Content>
-</ContentPage>
+  <!-- <ContentPage Title="Merchant" /> -->
+</TabbedPage>

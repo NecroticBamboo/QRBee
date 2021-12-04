@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:common="clr-namespace:ZXing.Common;assembly=zxing.portable"
+             xmlns:forms="clr-namespace:ZXing.Net.Mobile.Forms;assembly=ZXing.Net.Mobile.Forms"
+             xmlns:viewmodels="clr-namespace:QRBee.ViewModels" 
+             x:DataType="viewmodels:MerchantPageViewModel"
+             x:Class="QRBee.Views.MerchantPage">
+    <ContentPage.Content>
+        <StackLayout HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+
+            <StackLayout Orientation="Vertical" VerticalOptions="FillAndExpand">
+
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Enter your name: " Padding="5,10,0,0"/>
+                    <Entry Placeholder="Your name" HorizontalOptions="FillAndExpand" Text="{Binding Name}"/>
+                </StackLayout>
+
+                <StackLayout Orientation="Horizontal">
+                    <Label Text="Enter sum: "  Padding="5,0,35,0" />
+                    <Entry Placeholder="Amount" Keyboard="Numeric" HorizontalOptions="FillAndExpand" MaxLength="6" Text="{Binding Amount}"/>
+                </StackLayout>
+
+                <!-- <StackLayout Orientation="Horizontal"> -->
+                <!-- -->
+                <!-- </StackLayout> -->
+                <!-- -->
+                <!-- <StackLayout Orientation="Horizontal"> -->
+                <!-- -->
+                <!-- </StackLayout> -->
+
+                <forms:ZXingBarcodeImageView
+                    BarcodeFormat="QR_CODE"
+                    BarcodeValue="{Binding QrCode}"
+                    HorizontalOptions="FillAndExpand"
+                    VerticalOptions="FillAndExpand">
+                    <forms:ZXingBarcodeImageView.BarcodeOptions>
+                        <common:EncodingOptions Width="300" Height="300" />
+                    </forms:ZXingBarcodeImageView.BarcodeOptions>
+                </forms:ZXingBarcodeImageView>
+
+            </StackLayout>
+
+            
+
+            <StackLayout Orientation="Horizontal" VerticalOptions="End" Margin="0,0,0,10">
+                <Button Text="Generate QR code" HorizontalOptions="CenterAndExpand" BackgroundColor="Red" TextColor="Aqua" Command="{Binding GenerateQrCommand}"/>
+            </StackLayout>
+
+            
+
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

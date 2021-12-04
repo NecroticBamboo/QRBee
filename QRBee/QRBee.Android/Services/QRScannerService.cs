@@ -22,7 +22,8 @@ namespace QRBee.Droid.Services
             };
 
             var scanResult = await scanner.Scan(optionsCustom);
-            return scanResult.Text;
+
+            return scanResult != null ? scanResult.Text : "Nothing was scanned. Please try again.";
         }
     }
 }
