@@ -7,7 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBee.Android", "QRBee\QRBe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBee.iOS", "QRBee\QRBee.iOS\QRBee.iOS.csproj", "{D46DBAB1-19E0-441C-B2DB-38F1620C160E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBee", "QRBee\QRBee\QRBee.csproj", "{9C717836-BE20-4721-877B-8B6250245FF9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QRBee", "QRBee\QRBee\QRBee.csproj", "{9C717836-BE20-4721-877B-8B6250245FF9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBeeApi", "QRBeeApi\QRBeeApi.csproj", "{D985A736-12A3-4A7A-B1A7-502321BD460A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -73,6 +75,18 @@ Global
 		{9C717836-BE20-4721-877B-8B6250245FF9}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{9C717836-BE20-4721-877B-8B6250245FF9}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 		{9C717836-BE20-4721-877B-8B6250245FF9}.Release|iPhoneSimulator.Deploy.0 = Release|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhone.Build.0 = Release|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
