@@ -64,7 +64,7 @@ namespace QRBee.ViewModels
 
         public async void OnGenerateQrClicked(object obj)
         {
-            QrCode = $"{Name}.{Amount}.{DateTime.Now}";
+            QrCode = $"{Name}.{Amount:0.00}.{DateTime.UtcNow:O}";
             // Prefixing with `//` switches to a different navigation stack instead of pushing to the active one
             // await Shell.Current.GoToAsync($"//{nameof(AboutPage)}");
         }
