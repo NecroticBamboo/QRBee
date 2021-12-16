@@ -1,18 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Text;
-using QRBee.Views;
 using Xamarin.Forms;
-using ZXing;
-using ZXing.Common;
 
 namespace QRBee.ViewModels
 {
     internal class MerchantPageViewModel : BaseViewModel
     {
         private string _name;
-        private double _amount;
+        private decimal _amount;
         private string _qrCode;
 
         public Command GenerateQrCommand { get; }
@@ -27,14 +21,14 @@ namespace QRBee.ViewModels
             get => _name;
             set
             {
-                if(_name==value) 
+                if (_name == value)
                     return;
-                _name= value;
+                _name = value;
                 OnPropertyChanged(nameof(Name));
             }
         }
 
-        public double Amount
+        public decimal Amount
         {
             get => _amount;
             set
@@ -56,7 +50,7 @@ namespace QRBee.ViewModels
                 // _qrCode = $"{Amount}/{Name}";
                 if (_qrCode == value)
                     return;
-        
+
                 _qrCode = value;
                 OnPropertyChanged(nameof(QrCode));
             }

@@ -1,7 +1,4 @@
-﻿using System;
-using Xamarin.Forms.Xaml;
-using ZXing;
-using System.Drawing;
+﻿using Xamarin.Forms.Xaml;
 using QRBee.ViewModels;
 
 namespace QRBee.Views

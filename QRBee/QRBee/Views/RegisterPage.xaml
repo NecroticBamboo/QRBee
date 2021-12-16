@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" xmlns:viewmodels="clr-namespace:QRBee.ViewModels" x:DataType="viewmodels:RegisterViewModel"
+             x:Class="QRBee.Views.RegisterPage">
+
+    <ContentPage.Content>
+        <ScrollView>
+            <StackLayout Padding="10,0,10,0" VerticalOptions="Center">
+                <StackLayout Orientation="Vertical">
+                    <Label Text="User information" />
+                    <Label Text="Name: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" Keyboard="Text" Text="{Binding Name}"/>
+
+                    <Label Text="Email address: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" Keyboard="Email" Text="{Binding Email}"/>
+
+                    <Label Text="Date of birth: " Padding="5,0,0,0" />
+                    <DatePicker MinimumDate="01/01/1940" MaximumDate="01/01/2050" HorizontalOptions="FillAndExpand" Date="{Binding DateOfBirth}"/>
+
+                    <Label Text="Password: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" IsPassword="True" Text="{Binding Password1}" TextColor="{Binding Password1Color}"/>
+
+                    <Label Text="Confirm password: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" IsPassword="True" Text="{Binding Password2}" TextColor="{Binding Password2Color}"/>
+                </StackLayout>
+
+                <StackLayout Orientation="Vertical">
+                    <Label Text="Card information" />
+                    <Label Text="Card number: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" Keyboard="Numeric" MaxLength="16" Text="{Binding CardNumber}"/>
+
+                    <Label Text="Valid from: " Padding="5,5,0,0" />
+                    <DatePicker MinimumDate="01/01/1940" MaximumDate="01/01/2050" HorizontalOptions="FillAndExpand" Date="{Binding ValidFrom}"/>
+
+                    <Label Text="Expiration date: " Padding="5,5,0,0" />
+                    <DatePicker MinimumDate="01/01/1940" MaximumDate="01/01/2050" HorizontalOptions="FillAndExpand" Date="{Binding ExpirationDate}"/>
+
+                    <Label Text="Card holder name: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" Keyboard="Text" Text="{Binding CardHolderName}"/>
+
+                    <Label Text="CVC: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" Keyboard="Numeric" MaxLength="3" Text="{Binding CVC}"/>
+
+                    <Label Text="Issue No: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" Keyboard="Numeric" MaxLength="2" Text="{Binding IssueNo}"/>
+                </StackLayout>
+
+                <Button VerticalOptions="Center"  Margin="0,0,0,10" Text="Register" Command="{Binding RegisterCommand}" />
+            </StackLayout>
+        </ScrollView>
+    </ContentPage.Content>
+
+</ContentPage>

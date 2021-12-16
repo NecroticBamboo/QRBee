@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using QRBee.Services;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
@@ -26,7 +21,8 @@ namespace QRBee.Views
                 var result = await scanner.ScanQR();
                 if (result != null)
                 {
-                    QrCodeScanner.Text = result;
+                    Name.Text = result;
+                    Amount.Text = result;
                 }
             }
             catch (Exception ex)

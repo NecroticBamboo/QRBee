@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace QRBee.Core
+﻿namespace QRBee.Core
 {
     public class ClientCardData
     {
@@ -12,16 +6,16 @@ namespace QRBee.Core
         public string CardNumber
         {
             get;
-            init;
+            set;
         }
 
         public string ExpirationDateMMYY
         {
             get;
-            init;
+            set;
         }
 
-        public string? ValidFrom
+        public string ValidFrom
         {
             get;
             set;
@@ -30,13 +24,13 @@ namespace QRBee.Core
         public string CardHolderName
         {
             get;
-            init;
+            set;
         }
 
         public string CVC
         {
             get;
-            init;
+            set;
         }
 
         public int? IssueNo

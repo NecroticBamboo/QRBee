@@ -1,38 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace QRBee.Core.Data
+﻿namespace QRBee.Core.Data
 {
     public record MerchantToClientRequest
     {
         public string TransactionId
         {
             get;
-            init;
+            set;
         }
 
         public string Name
         {
             get;
-            init;
+            set;
         }
 
         public decimal Amount
         {
             get;
-            init;
+            set;
         }
 
         public DateTime TimeStampUTC
         {
             get;
-            init;
+            set;
         }
 
-        public string? MerchantSignature
+        public string MerchantSignature
         {
             get;
             set;

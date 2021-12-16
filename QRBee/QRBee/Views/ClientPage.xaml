@@ -7,8 +7,11 @@
             <!-- <Label Text="Hello this is a test page." -->
             <!--     VerticalOptions="CenterAndExpand"  -->
             <!--     HorizontalOptions="CenterAndExpand" /> -->
-            <StackLayout Orientation="Horizontal" VerticalOptions="FillAndExpand">
-                <Label x:Name="QrCodeScanner" VerticalOptions="FillAndExpand" Text="Text to scan"/>
+            <StackLayout Orientation="Vertical" VerticalOptions="FillAndExpand">
+                <StackLayout Orientation="Vertical">
+                    <Label x:Name="Name" VerticalOptions="FillAndExpand" Text="Merchant name: "/>
+                    <Label x:Name="Amount" VerticalOptions="FillAndExpand" Text="Amount: "/>
+                </StackLayout>
             </StackLayout>
 
             <StackLayout Orientation="Horizontal" VerticalOptions="End" Margin="0,0,0,10">

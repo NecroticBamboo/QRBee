@@ -1,32 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace QRBee.Core.Data
+﻿namespace QRBee.Core.Data
 {
     public record ClientToMerchantResponse
     {
         public MerchantToClientRequest Request
         {
             get;
-            init;
+            set;
         }
 
         public string ClientId
         {
             get;
-            init;
+            set;
         }
 
         public DateTime TimeStampUTC
         {
             get;
-            init;
+            set;
         }
 
-        public string? ClientSignature
+        public string ClientSignature
         {
             get;
             set;
@@ -35,7 +29,7 @@ namespace QRBee.Core.Data
         public string EncryptedClientCardData
         {
             get;
-            init;
+            set;
         }
 
         public string AsString() => $"{Request.AsString()}|{ClientId}|{TimeStampUTC:O}";

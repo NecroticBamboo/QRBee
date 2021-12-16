@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace QRBee.Core.Data
+﻿namespace QRBee.Core.Data
 {
     public record PaymentResponse
     {
@@ -12,13 +6,13 @@ namespace QRBee.Core.Data
         public string ServerTransactionId
         {
             get;
-            init;
+            set;
         }
 
         public PaymentRequest PaymentRequest
         {
             get;
-            init;
+            set;
         }
 
         public string AsString() => $"{ServerTransactionId}|{PaymentRequest.AsString()}";
