@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:QRBee.ViewModels"
+             xmlns:forms="clr-namespace:ZXing.Net.Mobile.Forms;assembly=ZXing.Net.Mobile.Forms"
+             xmlns:common="clr-namespace:ZXing.Common;assembly=zxing.portable"
+             x:DataType="viewmodels:ClientPageViewModel"
              x:Class="QRBee.Views.ClientPage">
     <ContentPage.Content>
         <StackLayout HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
@@ -9,13 +13,28 @@
             <!--     HorizontalOptions="CenterAndExpand" /> -->
             <StackLayout Orientation="Vertical" VerticalOptions="FillAndExpand">
                 <StackLayout Orientation="Vertical">
-                    <Label x:Name="Name" VerticalOptions="FillAndExpand" Text="Merchant name: "/>
-                    <Label x:Name="Amount" VerticalOptions="FillAndExpand" Text="Amount: "/>
+                    <Label VerticalOptions="FillAndExpand" Text="Amount:"/>
+                    <Label VerticalOptions="FillAndExpand" Text="{Binding Amount}"/>
                 </StackLayout>
-            </StackLayout>
 
-            <StackLayout Orientation="Horizontal" VerticalOptions="End" Margin="0,0,0,10">
-                <Button  Text="Scan me" HorizontalOptions="CenterAndExpand" BackgroundColor="Aqua" TextColor="Red" Clicked="OnScanButtonClicked"/>
+                <forms:ZXingBarcodeImageView
+                    BarcodeFormat="QR_CODE"
+                    BarcodeValue="{Binding QrCode}"
+                    HorizontalOptions="FillAndExpand"
+                    VerticalOptions="FillAndExpand">
+                    <forms:ZXingBarcodeImageView.BarcodeOptions>
+                        <common:EncodingOptions Width="300" Height="300" />
+                    </forms:ZXingBarcodeImageView.BarcodeOptions>
+                </forms:ZXingBarcodeImageView>
+
+            </StackLayout>
+            
+            <StackLayout Orientation="Vertical" VerticalOptions="End" Margin="0,0,0,10">
+                <StackLayout Orientation="Horizontal">
+                    <Button  Text="Accept" HorizontalOptions="FillAndExpand" BackgroundColor="DarkGreen" IsVisible="{Binding IsVisible}" Command="{Binding GenerateQrCommand}"/>
+                    <Button  Text="Deny" HorizontalOptions="FillAndExpand" BackgroundColor="DarkRed" IsVisible="{Binding IsVisible}"/>
+                </StackLayout>
+                <Button  Text="Scan me" HorizontalOptions="FillAndExpand" BackgroundColor="Aqua" TextColor="Red" Command="{Binding ScanCommand}"/>
             </StackLayout>
 
         </StackLayout>

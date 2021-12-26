@@ -23,9 +23,6 @@
                 <!-- -->
                 <!-- </StackLayout> -->
                 <!-- -->
-                <!-- <StackLayout Orientation="Horizontal"> -->
-                <!-- -->
-                <!-- </StackLayout> -->
 
                 <forms:ZXingBarcodeImageView
                     BarcodeFormat="QR_CODE"
@@ -39,10 +36,10 @@
 
             </StackLayout>
 
-            
 
-            <StackLayout Orientation="Horizontal" VerticalOptions="End" Margin="0,0,0,10">
-                <Button Text="Generate QR code" HorizontalOptions="CenterAndExpand" BackgroundColor="Red" TextColor="Aqua" Command="{Binding GenerateQrCommand}"/>
+            <StackLayout Orientation="Vertical" VerticalOptions="End" Margin="0,0,0,10">
+                <Button  Text="Scan response" HorizontalOptions="FillAndExpand" BackgroundColor="Aqua" TextColor="Red" IsVisible="{Binding IsVisible}" Command="{Binding ScanCommand}"/>
+                <Button Text="Generate QR code" HorizontalOptions="FillAndExpand" BackgroundColor="Red" TextColor="Aqua" Command="{Binding GenerateQrCommand}"/>
             </StackLayout>
 
             

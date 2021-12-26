@@ -1,19 +1,41 @@
 ﻿using System;
+using QRBee.Core.Data;
+using QRBee.Services;
 using Xamarin.Forms;
 
 namespace QRBee.ViewModels
 {
     internal class MerchantPageViewModel : BaseViewModel
     {
+        private bool _isVisible;
         private string _name;
         private decimal _amount;
         private string _qrCode;
 
         public Command GenerateQrCommand { get; }
+        public Command ScanCommand{ get; }
 
         public MerchantPageViewModel()
         {
+            ScanCommand = new Command(OnScanButtonClicked);
             GenerateQrCommand = new Command(OnGenerateQrClicked);
+        }
+
+        private async void OnScanButtonClicked(object sender)
+        {
+            try
+            {
+                var scanner = DependencyService.Get<IQRScanner>();
+                var result = await scanner.ScanQR();
+                if (result != null)
+                {
+
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public string Name
@@ -42,6 +64,20 @@ namespace QRBee.ViewModels
             }
         }
 
+        public bool IsVisible
+        {
+            get => _isVisible;
+            set
+            {
+                if (value == _isVisible)
+                {
+                    return;
+                }
+                _isVisible = value;
+                OnPropertyChanged(nameof(IsVisible));
+            }
+        }
+
         public string QrCode
         {
             get => _qrCode;
@@ -58,9 +94,16 @@ namespace QRBee.ViewModels
 
         public async void OnGenerateQrClicked(object obj)
         {
-            QrCode = $"{Name}.{Amount:0.00}.{DateTime.UtcNow:O}";
-            // Prefixing with `//` switches to a different navigation stack instead of pushing to the active one
-            // await Shell.Current.GoToAsync($"//{nameof(AboutPage)}");
+            var trans = new MerchantToClientRequest
+            {
+                TransactionId = Guid.NewGuid().ToString("D"),
+                Name = Name,
+                Amount = Amount,
+                TimeStampUTC = DateTime.UtcNow
+            };
+            // TODO Create merchant signature.
+            QrCode = trans.AsString();
+            IsVisible = true;
         }
 
     }
