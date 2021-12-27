@@ -1,6 +1,6 @@
 ﻿namespace QRBee.Core
 {
-    internal class RegistrationData
+    public record RegistrationRequest
     {
         public string Name
         {
@@ -21,6 +21,12 @@
         }
 
         public string CertificateRequest
+        {
+            get;
+            set;
+        }
+
+        public bool RegisterAsMerchant
         {
             get;
             set;

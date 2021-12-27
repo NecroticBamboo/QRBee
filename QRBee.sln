@@ -9,7 +9,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBee.iOS", "QRBee\QRBee.iO
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QRBee", "QRBee\QRBee\QRBee.csproj", "{9C717836-BE20-4721-877B-8B6250245FF9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBeeApi", "QRBeeApi\QRBeeApi.csproj", "{D985A736-12A3-4A7A-B1A7-502321BD460A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QRBee.Api", "QRBeeApi\QRBee.Api.csproj", "{D985A736-12A3-4A7A-B1A7-502321BD460A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QRBee.Core", "QRBee.Core\QRBee.Core.csproj", "{7C461562-66EF-4894-8AD8-F27F0B94053F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +89,18 @@ Global
 		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhone.Build.0 = Release|Any CPU
 		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{D985A736-12A3-4A7A-B1A7-502321BD460A}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhone.Build.0 = Release|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
