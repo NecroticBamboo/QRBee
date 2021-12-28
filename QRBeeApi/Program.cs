@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using QRBee.Api;
 using QRBee.Api.Services;
@@ -12,10 +13,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<IQRBeeAPI,QRBeeAPI>();
-builder.Services.AddSingleton<IStorage, Storage>();
-builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("QRBeeDatabase"));
-builder.Services.AddSingleton<IMongoClient>( cfg => new MongoClient(cfg.GetRequiredService<DatabaseSettings>().ToMongoDbSettings()));
+builder.Services
+    .AddSingleton<IQRBeeAPI,QRBeeAPI>()
+    .AddSingleton<IStorage, Storage>()
+    .Configure<DatabaseSettings>(builder.Configuration.GetSection("QRBeeDatabase"))
+    .AddSingleton<IMongoClient>( cfg => new MongoClient(cfg.GetRequiredService<IOptions<DatabaseSettings>>().Value.ToMongoDbSettings()))
+    ;
 
 var app = builder.Build();
 

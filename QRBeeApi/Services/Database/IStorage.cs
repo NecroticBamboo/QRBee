@@ -1,12 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
-
-namespace QRBee.Api.Services
+﻿namespace QRBee.Api.Services.Database
 {
     public interface IStorage
     {
 
-        void PutUserInfo(UserInfo info);
-        UserInfo GetUserInfo(string email);
+        Task<string> PutUserInfo(UserInfo info);
+        Task<UserInfo> GetUserInfo(string email);
 
     }
 }

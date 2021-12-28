@@ -18,7 +18,7 @@ namespace QRBee.Api.Controllers
             _service = service;
         }
 
-        [HttpPost]
+        [HttpPost("Register")]
         public Task<RegistrationResponse>  Register([FromBody] RegistrationRequest value)
         {
             return _service.Register(value);
