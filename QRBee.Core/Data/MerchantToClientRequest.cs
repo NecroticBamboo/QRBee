@@ -34,8 +34,18 @@ namespace QRBee.Core.Data
             set;
         }
 
+        /// <summary>
+        /// Convert MerchantToClientRequest to string to be used as QR Code source (along with merchant signature)
+        /// </summary>
+        /// <returns>String conversion</returns>
         public string AsString() => $"{TransactionId}|{Name}|{Amount.ToString("0.00", CultureInfo.InvariantCulture)}|{TimeStampUTC:O}";
 
+        /// <summary>
+        /// Convert from string
+        /// </summary>
+        /// <param name="input"> A string representation of MerchantToClientRequest</param>
+        /// <returns> Converted string</returns>
+        /// <exception cref="ApplicationException">Thrown if the input string is incorrect</exception>
         public static MerchantToClientRequest FromString(string input)
         {
             var s = input.Split('|');

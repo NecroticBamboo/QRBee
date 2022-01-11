@@ -9,6 +9,10 @@
             set;
         }
 
+        /// <summary>
+        /// Convert PaymentRequest to string
+        /// </summary>
+        /// <returns>Converted string</returns>
         public string AsString() => Request.AsString();
 
     }

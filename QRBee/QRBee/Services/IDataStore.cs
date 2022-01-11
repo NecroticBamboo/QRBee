@@ -4,6 +4,10 @@ using System.Threading.Tasks;
 
 namespace QRBee.Services
 {
+    /// <summary>
+    /// Database interface
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public interface IDataStore<T>
     {
         Task<bool> AddItemAsync(T item);

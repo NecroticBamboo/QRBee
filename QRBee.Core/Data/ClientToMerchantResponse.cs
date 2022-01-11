@@ -32,8 +32,18 @@
             set;
         }
 
+        /// <summary>
+        /// Convert ClientToMerchantResponse to string to be used as QR Code source (along with client signature)
+        /// </summary>
+        /// <returns> Converted string</returns>
         public string AsString() => $"{ClientId}|{TimeStampUTC:O}|{Request.AsString()}";
 
+        /// <summary>
+        /// Convert from string
+        /// </summary>
+        /// <param name="input">A string representation of ClientToMerchantResponse</param>
+        /// <returns>Converted string</returns>
+        /// <exception cref="ApplicationException">Thrown if the input string is incorrect</exception>
         public static ClientToMerchantResponse FromString(string input)
         {
             var s = input.Split('|');

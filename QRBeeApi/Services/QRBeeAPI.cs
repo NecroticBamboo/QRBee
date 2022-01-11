@@ -6,6 +6,9 @@ using QRBee.Core.Data;
 
 namespace QRBee.Api.Services
 {
+    /// <summary>
+    /// Implementation of <see href="IQRBeeAPI"/>
+    /// </summary>
     public class QRBeeAPI: IQRBeeAPI
     {
         private readonly IStorage _storage;

@@ -15,6 +15,10 @@
             set;
         }
 
+        /// <summary>
+        /// Convert PaymentResponse to string to be encrypted and transmitted back to merchant
+        /// </summary>
+        /// <returns>Converted string</returns>
         public string AsString() => $"{ServerTransactionId}|{PaymentRequest.AsString()}";
     }
 }

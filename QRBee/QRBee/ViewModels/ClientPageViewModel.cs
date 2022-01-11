@@ -92,6 +92,10 @@ namespace QRBee.ViewModels
             }
         }
 
+        /// <summary>
+        /// Reaction on GenerateQR button clicked
+        /// </summary>
+        /// <param name="obj"></param>
         public async void OnGenerateQrClicked(object obj)
         {
 

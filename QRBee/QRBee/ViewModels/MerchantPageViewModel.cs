@@ -92,6 +92,10 @@ namespace QRBee.ViewModels
             }
         }
 
+        /// <summary>
+        /// Reaction on Generate QR code button
+        /// </summary>
+        /// <param name="obj"></param>
         public async void OnGenerateQrClicked(object obj)
         {
             var trans = new MerchantToClientRequest

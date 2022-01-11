@@ -39,6 +39,11 @@
             set;
         }
 
+        /// <summary>
+        /// Convert ClientCardData to string to be used as a source for encryption.
+        /// WARNING: this should always be encrypted and never transmitted in clear text form.
+        /// </summary>
+        /// <returns>Converted string</returns>
         public string AsString() => $"{CardNumber}|{ExpirationDateMMYY}|{ValidFrom}|{CardHolderName}|{CVC}|{IssueNo}";
 
     }
