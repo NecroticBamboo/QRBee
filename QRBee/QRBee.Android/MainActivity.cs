@@ -6,6 +6,7 @@ using Android.Runtime;
 using Android.OS;
 using Android.Support.V4.Content;
 using AndroidX.Core.App;
+using Plugin.Fingerprint;
 
 namespace QRBee.Droid
 {
@@ -18,9 +19,13 @@ namespace QRBee.Droid
             base.OnCreate(savedInstanceState);
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
+
+            CrossFingerprint.SetCurrentActivityResolver(()=>Xamarin.Essentials.Platform.CurrentActivity);
+
             global::Xamarin.Forms.Forms.Init(this, savedInstanceState);
             LoadApplication(new App());
             ZXing.Mobile.MobileBarcodeScanner.Initialize(Application);
+
             if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.Camera) == (int) Permission.Granted)
             {
                 
@@ -28,6 +33,7 @@ namespace QRBee.Droid
             else
             {
                 ActivityCompat.RequestPermissions(this, new String[] { Manifest.Permission.Camera }, 0);
+                // ActivityCompat.RequestPermissions(this, new String[] { Manifest.Permission.UseFingerprint }, 0);
             }
 
         }

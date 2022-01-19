@@ -10,13 +10,13 @@
     <ContentPage.Content>
 
         <StackLayout Padding="10,0,10,0" VerticalOptions="Center">
-            <StackLayout Orientation="Vertical">
-                <Label Text="Login: " Padding="5,10,0,0"/>
-                <Entry HorizontalOptions="FillAndExpand" Keyboard="Text"/>
-
-                <Label Text="Password: "  Padding="5,0,0,0" />
-                <Entry HorizontalOptions="FillAndExpand" IsPassword="True"/>
-            </StackLayout>
+            <!-- <StackLayout Orientation="Vertical"> -->
+            <!--     <Label Text="Login: " Padding="5,10,0,0"/> -->
+            <!--     <Entry HorizontalOptions="FillAndExpand" Keyboard="Text"/> -->
+            <!-- -->
+            <!--     <Label Text="Password: "  Padding="5,0,0,0" /> -->
+            <!--     <Entry HorizontalOptions="FillAndExpand" IsPassword="True"/> -->
+            <!-- </StackLayout> -->
 
             <Button VerticalOptions="Center" Text="Login" Command="{Binding LoginCommand}"/>
             <Button VerticalOptions="Center" Text="Register new user" Command="{Binding RegisterCommand}"/>
