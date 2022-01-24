@@ -1,15 +1,15 @@
-﻿using QRBee.Views;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Linq;
+using QRBee.Views;
 using Plugin.Fingerprint;
 using Plugin.Fingerprint.Abstractions;
+using QRBee.Services;
 using Xamarin.Forms;
 
 namespace QRBee.ViewModels
 {
     public class LoginViewModel : BaseViewModel
     {
+        private bool _isPinVisible;
         public Command LoginCommand
         {
             get;
@@ -22,7 +22,9 @@ namespace QRBee.ViewModels
         {
             LoginCommand = new Command(OnLoginClicked);
             RegisterCommand = new Command(OnRegisterClicked);
+            
         }
+        public string PinCode { get; }
 
         /// <summary>
         /// Reaction on Login button
@@ -30,11 +32,23 @@ namespace QRBee.ViewModels
         /// <param name="obj"></param>
         private async void OnLoginClicked(object obj)
         {
-            bool isFingerprintAvailable = await CrossFingerprint.Current.IsAvailableAsync(false);
+            var isFingerprintAvailable = await CrossFingerprint.Current.IsAvailableAsync(false);
             if (!isFingerprintAvailable)
             {
                 //Insert PIN
-                return;
+                IsPinVisible = true;
+                var localSettings = DependencyService.Resolve<ILocalSettings>();
+                var pin = (await localSettings.LoadSettings()).PIN;
+
+                if (!string.IsNullOrEmpty(pin) && pin.Equals(PinCode))
+                {
+                    await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
+                }
+                else
+                {
+                    await Shell.Current.GoToAsync($"{nameof(RegisterPage)}");
+                }
+
             }
 
             var conf = new AuthenticationRequestConfiguration("Authentication", "Authenticate access to your personal data");
@@ -50,6 +64,20 @@ namespace QRBee.ViewModels
             {
                 //Failure
                 return;
+            }
+        }
+
+        public bool IsPinVisible
+        {
+            get => _isPinVisible;
+            set
+            {
+                if (value == _isPinVisible)
+                {
+                    return;
+                }
+                _isPinVisible = value;
+                OnPropertyChanged(nameof(IsPinVisible));
             }
         }
 

@@ -1,6 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Net.Http;
+using QRBee.Core;
+using QRBee.Services;
 using QRBee.Views;
 using Xamarin.Forms;
 
@@ -62,12 +64,49 @@ namespace QRBee.ViewModels
                 OnPropertyChanged(nameof(Password2Color));
             }
         }
-
-
+        public string Pin { get; set; }
 
         private async void OnRegisterClicked(object obj)
         {
-            await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
+            using var client = new HttpClient();
+            var localSettings = DependencyService.Resolve<ILocalSettings>();
+
+            var service = new Core.Client.Client(localSettings.QRBeeApiUrl,client);
+
+            try
+            {
+                await service.RegisterAsync(new RegistrationRequest
+                {
+                    DateOfBirth        = DateOfBirth,
+                    Email              = Email,
+                    Name               = Name,
+                    RegisterAsMerchant = false
+                });
+
+                //save local settings
+                var settings = new Settings
+                {
+                    CardHolderName = CardHolderName, 
+                    CardNumber     = CardNumber, 
+                    CVC            = CVC, 
+                    DateOfBirth    = DateOfBirth, 
+                    Email          = Email, 
+                    ExpirationDate = ExpirationDate,
+                    IsRegistered   = true,
+                    IssueNo        = IssueNo,
+                    ValidFrom      = ValidFrom,
+                    Name           = Name, 
+                    PIN            = Pin
+                };
+                await localSettings.SaveSettings(settings);
+
+                await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
+            }
+            catch (Exception)
+            {
+                var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                await page.DisplayAlert("Error", "The Backend isn't working", "Ok");
+            }
         }
 
     }

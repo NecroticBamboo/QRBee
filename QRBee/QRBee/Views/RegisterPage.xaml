@@ -23,6 +23,9 @@
 
                     <Label Text="Confirm password: " Padding="5,5,0,0" />
                     <Entry HorizontalOptions="FillAndExpand" IsPassword="True" Text="{Binding Password2}" TextColor="{Binding Password2Color}"/>
+
+                    <Label Text="Login PIN: " Padding="5,5,0,0" />
+                    <Entry HorizontalOptions="FillAndExpand" IsPassword="True" Text="{Binding Pin}" Keyboard="Numeric" MaxLength="4"/>
                 </StackLayout>
 
                 <StackLayout Orientation="Vertical">
