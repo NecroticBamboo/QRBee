@@ -26,7 +26,7 @@ namespace QRBee.Services
     {
         string QRBeeApiUrl { get; }
         Task SaveSettings(Settings settings);
-        Task<Settings> LoadSettings();
+        Settings LoadSettings();
 
 
     }

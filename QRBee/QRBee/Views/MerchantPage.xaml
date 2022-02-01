@@ -12,8 +12,7 @@
             <StackLayout Orientation="Vertical" VerticalOptions="FillAndExpand">
 
                 <StackLayout Orientation="Vertical">
-                    <Label Text="Enter your name: " Padding="5,10,0,0"/>
-                    <Entry Placeholder="Your name" HorizontalOptions="FillAndExpand" Text="{Binding Name}"/>
+                    <Label Text="{Binding Name, Mode=OneTime}" Padding="5,10,0,0"/>
 
                     <Label Text="Enter sum: "  Padding="5,0,0,0" />
                     <Entry Placeholder="Amount" Keyboard="Numeric" HorizontalOptions="FillAndExpand" MaxLength="6" Text="{Binding Amount}"/>

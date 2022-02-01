@@ -44,9 +44,9 @@ namespace QRBee.ViewModels
                     IsVisible = true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                throw;
+                await Application.Current.MainPage.DisplayAlert("Error","Wrong QR code scanned","Ok");
             }
         }
 

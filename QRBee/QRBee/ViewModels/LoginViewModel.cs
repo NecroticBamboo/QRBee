@@ -38,7 +38,7 @@ namespace QRBee.ViewModels
                 //Insert PIN
                 IsPinVisible = true;
                 var localSettings = DependencyService.Resolve<ILocalSettings>();
-                var pin = (await localSettings.LoadSettings()).PIN;
+                var pin = localSettings.LoadSettings().PIN;
 
                 if (!string.IsNullOrEmpty(pin) && pin.Equals(PinCode))
                 {

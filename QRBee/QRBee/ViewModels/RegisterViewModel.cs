@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net.Http;
 using QRBee.Core;
+using QRBee.Core.Data;
 using QRBee.Services;
 using QRBee.Views;
 using Xamarin.Forms;
@@ -75,6 +76,24 @@ namespace QRBee.ViewModels
 
             try
             {
+
+                //save local settings
+                var settings       = new Settings
+                {
+                    CardHolderName = CardHolderName,
+                    CardNumber     = CardNumber,
+                    CVC            = CVC,
+                    DateOfBirth    = DateOfBirth,
+                    Email          = Email,
+                    ExpirationDate = ExpirationDate,
+                    IsRegistered   = true,
+                    IssueNo        = IssueNo,
+                    ValidFrom      = ValidFrom,
+                    Name           = Name,
+                    PIN            = Pin
+                };
+                await localSettings.SaveSettings(settings);
+
                 await service.RegisterAsync(new RegistrationRequest
                 {
                     DateOfBirth        = DateOfBirth,
@@ -82,23 +101,6 @@ namespace QRBee.ViewModels
                     Name               = Name,
                     RegisterAsMerchant = false
                 });
-
-                //save local settings
-                var settings = new Settings
-                {
-                    CardHolderName = CardHolderName, 
-                    CardNumber     = CardNumber, 
-                    CVC            = CVC, 
-                    DateOfBirth    = DateOfBirth, 
-                    Email          = Email, 
-                    ExpirationDate = ExpirationDate,
-                    IsRegistered   = true,
-                    IssueNo        = IssueNo,
-                    ValidFrom      = ValidFrom,
-                    Name           = Name, 
-                    PIN            = Pin
-                };
-                await localSettings.SaveSettings(settings);
 
                 await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
             }

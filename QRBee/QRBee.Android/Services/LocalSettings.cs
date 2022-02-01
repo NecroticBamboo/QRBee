@@ -18,14 +18,15 @@ namespace QRBee.Droid.Services
             await Application.Current.SavePropertiesAsync();
         }
 
-        public Task<Settings> LoadSettings()
+        public Settings LoadSettings()
         {
             if (!Application.Current.Properties.ContainsKey("Settings"))
-                return Task.FromResult(new Settings());
+                return new Settings();
 
             var json = Application.Current.Properties["Settings"].ToString();
             var settings = JsonConvert.DeserializeObject<Settings>(json);
-            return Task.FromResult(settings);
+
+            return settings;
         }
     }
 }

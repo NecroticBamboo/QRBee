@@ -1,4 +1,4 @@
-﻿namespace QRBee.Core
+﻿namespace QRBee.Core.Data
 {
     public class ClientCardData
     {
