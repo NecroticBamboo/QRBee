@@ -80,6 +80,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\LocalSettings.cs" />
     <Compile Include="Services\QRScannerService.cs" />
+    <Compile Include="Services\SecurityService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\AboutResources.txt" />
@@ -106,6 +107,10 @@
     <AndroidResource Include="Resources\drawable\icon_feed.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\QRBee.Core\QRBee.Core.csproj">
+      <Project>{7c461562-66ef-4894-8ad8-f27f0b94053f}</Project>
+      <Name>QRBee.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\QRBee\QRBee.csproj">
       <Project>{C651AD58-D087-4261-8C8E-EBA6140F3E72}</Project>
       <Name>QRBee</Name>
