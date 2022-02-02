@@ -12,15 +12,18 @@ namespace QRBee.Api.Controllers
     public class QRBeeController : ControllerBase
     {
         private readonly IQRBeeAPI _service;
+        private readonly ILogger<QRBeeController> _logger;
 
-        public QRBeeController(IQRBeeAPI service)
+        public QRBeeController(IQRBeeAPI service, ILogger<QRBeeController> logger)
         {
             _service = service;
+            _logger = logger;
         }
 
         [HttpPost("Register")]
         public Task<RegistrationResponse>  Register([FromBody] RegistrationRequest value)
         {
+            _logger.LogDebug($"Trying to register user {value.Name}");
             return _service.Register(value);
         }
 

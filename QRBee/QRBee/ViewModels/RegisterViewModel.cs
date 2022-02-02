@@ -16,6 +16,19 @@ namespace QRBee.ViewModels
         public RegisterViewModel()
         {
             RegisterCommand = new Command(OnRegisterClicked);
+
+            var localSettings = DependencyService.Resolve<ILocalSettings>();
+            var settings = localSettings.LoadSettings();
+
+            Name           = settings.Name;
+            Email          = settings.Email;
+            DateOfBirth    = settings.DateOfBirth;
+            CardNumber     = settings.CardNumber;
+            ValidFrom      = settings.ValidFrom;
+            ExpirationDate = settings.ExpirationDate;
+            CardHolderName = settings.CardHolderName;
+            CVC            = settings.CVC;
+            IssueNo        = settings.IssueNo;
         }
 
         public Command RegisterCommand
@@ -102,12 +115,16 @@ namespace QRBee.ViewModels
                     RegisterAsMerchant = false
                 });
 
+                var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                await page.DisplayAlert("Success", "You have been registered successfully", "Ok");
+
                 await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                //TODO: delete exception message in error message
                 var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
-                await page.DisplayAlert("Error", "The Backend isn't working", "Ok");
+                await page.DisplayAlert("Error", $"The Backend isn't working: {e.Message}", "Ok");
             }
         }
 

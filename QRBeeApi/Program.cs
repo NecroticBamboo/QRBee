@@ -1,3 +1,4 @@
+using log4net;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using QRBee.Api;
@@ -5,6 +6,14 @@ using QRBee.Api.Services;
 using QRBee.Api.Services.Database;
 
 var builder = WebApplication.CreateBuilder(args);
+
+
+builder.Host.ConfigureLogging(logging =>
+{
+    logging.ClearProviders();
+    GlobalContext.Properties["LOGS_ROOT"] = Environment.GetEnvironmentVariable("LOGS_ROOT") ?? "";
+    logging.AddLog4Net("log4net.config");
+});
 
 // Add services to the container.
 
