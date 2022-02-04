@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using QRBee.Core;
 using QRBee.Core.Data;
 using QRBee.Services;
@@ -38,7 +39,7 @@ namespace QRBee.ViewModels
 
         public string Name { get; set; }
         public string Email { get; set; }
-        public string DateOfBirth { get; set; }
+        public DateTime DateOfBirth { get; set; }
         public string CardNumber { get; set; }
         public string ValidFrom { get; set; }
         public string ExpirationDate { get; set; }
@@ -58,10 +59,21 @@ namespace QRBee.ViewModels
                     return;
 
                 _password1 = value;
-                Password1Color = (string.IsNullOrWhiteSpace(_password1) || _password1.Length < 8 ) ? Color.Red : Color.Green;
+                Password1Color = (CheckPassword(_password1)) ? Color.Green : Color.Red;
                 OnPropertyChanged(nameof(Password1));
                 OnPropertyChanged(nameof(Password1Color));
             }
+        }
+
+        private static bool CheckPassword(string password)
+        {
+            if (string.IsNullOrWhiteSpace(password) || password.Length < 7)
+            {
+                return false;
+            }
+
+            return Regex.IsMatch(password, "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])");
+            //return string.IsNullOrWhiteSpace(password) || password.Length<8 && Regex.IsMatch(password, "[a-zA-Z0-9]");
         }
 
         public string Password2
@@ -82,13 +94,14 @@ namespace QRBee.ViewModels
 
         private async void OnRegisterClicked(object obj)
         {
-            using var client = new HttpClient();
+            using var client = new HttpClient(GetInsecureHandler());
             var localSettings = DependencyService.Resolve<ILocalSettings>();
 
             var service = new Core.Client.Client(localSettings.QRBeeApiUrl,client);
 
             try
             {
+                //TODO Check if ClientId already in LocalSettings. If Yes update data in database
 
                 //save local settings
                 var settings       = new Settings
@@ -109,7 +122,7 @@ namespace QRBee.ViewModels
 
                 await service.RegisterAsync(new RegistrationRequest
                 {
-                    DateOfBirth        = DateOfBirth,
+                    DateOfBirth        = DateOfBirth.ToString("yyyy-MM-dd"),
                     Email              = Email,
                     Name               = Name,
                     RegisterAsMerchant = false
@@ -126,6 +139,20 @@ namespace QRBee.ViewModels
                 var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
                 await page.DisplayAlert("Error", $"The Backend isn't working: {e.Message}", "Ok");
             }
+        }
+
+        // This method must be in a class in a platform project, even if
+        // the HttpClient object is constructed in a shared project.
+        public HttpClientHandler GetInsecureHandler()
+        {
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+            {
+                if (cert.Issuer.Equals("CN=localhost"))
+                    return true;
+                return errors == System.Net.Security.SslPolicyErrors.None;
+            };
+            return handler;
         }
 
     }

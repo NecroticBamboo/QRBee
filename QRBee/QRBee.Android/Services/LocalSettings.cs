@@ -9,7 +9,7 @@ namespace QRBee.Droid.Services
 {
     internal class LocalSettings : ILocalSettings
     {
-        public string QRBeeApiUrl => "https://192.169.0.12:5000";
+        public string QRBeeApiUrl => "https://10.0.2.2:7000";
 
         public async Task SaveSettings(Settings settings)
         {

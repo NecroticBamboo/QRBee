@@ -12,6 +12,7 @@ builder.Host.ConfigureLogging(logging =>
 {
     logging.ClearProviders();
     GlobalContext.Properties["LOGS_ROOT"] = Environment.GetEnvironmentVariable("LOGS_ROOT") ?? "";
+    System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
     logging.AddLog4Net("log4net.config");
 });
 

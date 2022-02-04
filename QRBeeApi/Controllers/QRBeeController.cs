@@ -23,7 +23,7 @@ namespace QRBee.Api.Controllers
         [HttpPost("Register")]
         public Task<RegistrationResponse>  Register([FromBody] RegistrationRequest value)
         {
-            _logger.LogDebug($"Trying to register user {value.Name}");
+            _logger.LogInformation($"Trying to register user {value.Name}");
             return _service.Register(value);
         }
 

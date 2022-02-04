@@ -26,12 +26,13 @@ namespace QRBee.Api.Services
             Validate(request);
 
             var info = Convert(request);
-            
+            //TODO Check that user doesn't exist(name,surname,dateOfBirth or Telephone number(get from Android))
+
             var clientId = await _storage.PutUserInfo(info);
 
             return new RegistrationResponse{ClientId = clientId};
         }
-
+        //TODO Write an UpdateUser command
         private static void Validate(RegistrationRequest request)
         {
             if (request == null)
