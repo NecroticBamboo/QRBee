@@ -19,5 +19,7 @@
         /// <returns>User information</returns>
         Task<UserInfo> GetUserInfo(string email);
 
+        Task UpdateUser(UserInfo info);
+
     }
 }

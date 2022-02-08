@@ -16,5 +16,12 @@ namespace QRBee.Api.Services
         /// <returns>Registration response</returns>
         Task<RegistrationResponse> Register(RegistrationRequest value);
 
+        /// <summary>
+        /// Handles Update request
+        /// </summary>
+        /// <param name="clientId"></param>
+        /// <param name="value">Update request</param>
+        Task Update(string clientId, RegistrationRequest value);
+
     }
 }

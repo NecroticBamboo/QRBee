@@ -26,13 +26,19 @@ namespace QRBee.Api.Services
             Validate(request);
 
             var info = Convert(request);
-            //TODO Check that user doesn't exist(name,surname,dateOfBirth or Telephone number(get from Android))
 
             var clientId = await _storage.PutUserInfo(info);
 
             return new RegistrationResponse{ClientId = clientId};
         }
-        //TODO Write an UpdateUser command
+
+        public Task Update(string clientId, RegistrationRequest request)
+        {
+            Validate(request);
+            var info = Convert(request);
+            return _storage.UpdateUser(info);
+        }
+
         private static void Validate(RegistrationRequest request)
         {
             if (request == null)
@@ -66,7 +72,7 @@ namespace QRBee.Api.Services
 
         }
 
-        private UserInfo Convert(RegistrationRequest request)
+        private static UserInfo Convert(RegistrationRequest request)
         {
             return new UserInfo(request.Name, request.Email, request.DateOfBirth);
         }

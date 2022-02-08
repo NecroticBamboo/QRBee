@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
 using QRBee.Api.Services;
 using QRBee.Core;
 using QRBee.Core.Data;
@@ -27,5 +28,11 @@ namespace QRBee.Api.Controllers
             return _service.Register(value);
         }
 
+        [HttpPatch("Update/{clientId}")]
+        public Task Update([FromRoute] string clientId, [FromBody] RegistrationRequest value)
+        {
+            _logger.LogInformation($"Trying to update user {value.Name}");
+            return _service.Update(clientId,value);
+        }
     }
 }

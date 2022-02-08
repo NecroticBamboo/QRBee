@@ -102,34 +102,50 @@ namespace QRBee.ViewModels
             try
             {
                 //TODO Check if ClientId already in LocalSettings. If Yes update data in database
+                var settings = localSettings.LoadSettings();
 
                 //save local settings
-                var settings       = new Settings
-                {
-                    CardHolderName = CardHolderName,
-                    CardNumber     = CardNumber,
-                    CVC            = CVC,
-                    DateOfBirth    = DateOfBirth,
-                    Email          = Email,
-                    ExpirationDate = ExpirationDate,
-                    IsRegistered   = true,
-                    IssueNo        = IssueNo,
-                    ValidFrom      = ValidFrom,
-                    Name           = Name,
-                    PIN            = Pin
-                };
+                settings.CardHolderName = CardHolderName;
+                settings.CardNumber     = CardNumber;
+                settings.CVC            = CVC;
+                settings.DateOfBirth    = DateOfBirth;
+                settings.Email          = Email;
+                settings.ExpirationDate = ExpirationDate;
+                settings.IssueNo        = IssueNo;
+                settings.ValidFrom      = ValidFrom;
+                settings.Name           = Name;
+                settings.PIN = Pin;
+
                 await localSettings.SaveSettings(settings);
 
-                await service.RegisterAsync(new RegistrationRequest
+                var request = new RegistrationRequest
                 {
-                    DateOfBirth        = DateOfBirth.ToString("yyyy-MM-dd"),
-                    Email              = Email,
-                    Name               = Name,
+                    DateOfBirth = DateOfBirth.ToString("yyyy-MM-dd"),
+                    Email = Email,
+                    Name = Name,
                     RegisterAsMerchant = false
-                });
+                };
 
-                var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
-                await page.DisplayAlert("Success", "You have been registered successfully", "Ok");
+                if (!settings.IsRegistered)
+                {
+                    var response = await service.RegisterAsync(request);
+
+                    // Save ClientId to LocalSettings
+                    settings = localSettings.LoadSettings();
+                    settings.ClientId = response.ClientId;
+                    await localSettings.SaveSettings(settings);
+
+                    var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                    await page.DisplayAlert("Success", "You have been registered successfully", "Ok");
+                }
+                else
+                {
+                    await service.UpdateAsync(settings.ClientId, request);
+                    var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                    await page.DisplayAlert("Success", "Your data has been updated successfully", "Ok");
+                }
+
+
 
                 await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
             }

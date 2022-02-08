@@ -8,8 +8,9 @@ namespace QRBee.Services
     public class Settings
     {
         //TODO add ClientId
+        public string ClientId       { get; set; }
         public string PIN            { get; set; }
-        public bool IsRegistered     { get; set; }
+        public bool IsRegistered => !string.IsNullOrWhiteSpace(ClientId); 
 
         public string Name           { get; set; }
         public string Email          { get; set; }
