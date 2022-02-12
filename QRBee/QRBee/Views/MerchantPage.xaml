@@ -27,7 +27,8 @@
                     BarcodeFormat="QR_CODE"
                     BarcodeValue="{Binding QrCode}"
                     HorizontalOptions="FillAndExpand"
-                    VerticalOptions="FillAndExpand">
+                    VerticalOptions="FillAndExpand"
+                    IsVisible="{Binding IsVisible}">
                     <forms:ZXingBarcodeImageView.BarcodeOptions>
                         <common:EncodingOptions Width="300" Height="300" />
                     </forms:ZXingBarcodeImageView.BarcodeOptions>

@@ -68,5 +68,37 @@ namespace QRBee.Api.Services.Database
             await collection.ReplaceOneAsync($"{{ _id: \"{info.Id}\" }}",info, new ReplaceOptions(){IsUpsert = false});
         }
 
+        public async Task PutTransactionInfo(TransactionInfo info)
+        {
+            var collection = _database.GetCollection<TransactionInfo>("Transactions");
+
+            var transaction = await TryGetTransactionInfo(info.Id);
+
+            if (transaction == null)
+            {
+                await collection.InsertOneAsync(info);
+                _logger.LogInformation($"Inserted new transaction with ID: {info.Id}");
+                return;
+            }
+
+            _logger.LogInformation($"Found transaction with ClientId: {info.Id}");
+        }
+
+        /// <summary>
+        /// Try to find if the Transaction already exists in the database
+        /// </summary>
+        /// <param name="id">parameter by which to find TransactionInfo</param>
+        /// <returns>null if transaction doesn't exist or TransactionInfo</returns>
+        private async Task<TransactionInfo?> TryGetTransactionInfo(string id)
+        {
+            var collection = _database.GetCollection<TransactionInfo>("Transactions");
+            using var cursor = await collection.FindAsync($"{{ Id: \"{id}\" }}");
+            if (!await cursor.MoveNextAsync())
+            {
+                return null;
+            }
+
+            return cursor.Current.FirstOrDefault();
+        }
     }
 }

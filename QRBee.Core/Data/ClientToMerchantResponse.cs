@@ -2,7 +2,7 @@
 {
     public record ClientToMerchantResponse
     {
-        public MerchantToClientRequest Request
+        public MerchantToClientRequest MerchantRequest
         {
             get;
             set;
@@ -36,7 +36,7 @@
         /// Convert ClientToMerchantResponse to string to be used as QR Code source (along with client signature)
         /// </summary>
         /// <returns> Converted string</returns>
-        public string AsString() => $"{ClientId}|{TimeStampUTC:O}|{Request.AsString()}";
+        public string AsQRCodeString() => $"{ClientId}|{TimeStampUTC:O}|{MerchantRequest.AsQRCodeString()}";
 
         /// <summary>
         /// Convert from string
@@ -47,14 +47,14 @@
         public static ClientToMerchantResponse FromString(string input)
         {
             var s = input.Split('|');
-            if (s.Length != 3)
+            if (s.Length < 3)
             {
-                throw new ApplicationException("Expected 3 elements");
+                throw new ApplicationException("Expected 3 or more elements");
             }
 
             var res = new ClientToMerchantResponse()
             {
-                Request = MerchantToClientRequest.FromString(string.Join("|", s.Skip(2))),
+                MerchantRequest = MerchantToClientRequest.FromString(string.Join("|", s.Skip(2))),
                 ClientId = s[0],
                 TimeStampUTC = DateTime.ParseExact(s[1], "O", null)
             };

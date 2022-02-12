@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Net.Http;
 using QRBee.Core.Data;
 using QRBee.Services;
 using Xamarin.Forms;
@@ -29,15 +30,41 @@ namespace QRBee.ViewModels
             {
                 var scanner = DependencyService.Get<IQRScanner>();
                 var result = await scanner.ScanQR();
-                if (result != null)
-                {
+                if (result == null) 
+                    return;
 
-                }
+                var client = new HttpClient(GetInsecureHandler());
+                var localSettings = DependencyService.Resolve<ILocalSettings>();
+
+                var service = new Core.Client.Client(localSettings.QRBeeApiUrl, client);
+                var paymentRequest = PaymentRequest.FromString(result);
+
+                //QrCode = null;
+                IsVisible = false;
+
+                await service.InsertTransactionAsync(paymentRequest);
+
+                await Application.Current.MainPage.DisplayAlert("Success", "The transaction completed successfully ", "Ok");
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                throw;
+                //TODO: delete exception message in error message
+                await Application.Current.MainPage.DisplayAlert("Error", $"The Backend isn't working: {e.Message}", "Ok");
             }
+        }
+
+        // This method must be in a class in a platform project, even if
+        // the HttpClient object is constructed in a shared project.
+        public HttpClientHandler GetInsecureHandler()
+        {
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) =>
+            {
+                if (cert.Issuer.Equals("CN=localhost"))
+                    return true;
+                return errors == System.Net.Security.SslPolicyErrors.None;
+            };
+            return handler;
         }
 
         public string Name { get; }
@@ -98,13 +125,15 @@ namespace QRBee.ViewModels
             {
                 var trans = new MerchantToClientRequest
                 {
-                    TransactionId = Guid.NewGuid().ToString("D"),
+                    //TODO get merchant id from database
+                    MerchantId = Guid.NewGuid().ToString("D"),
+                    MerchantTransactionId = Guid.NewGuid().ToString("D"),
                     Name = Name,
                     Amount = Amount,
                     TimeStampUTC = DateTime.UtcNow
                 };
                 // TODO Create merchant signature.
-                QrCode = trans.AsString();
+                QrCode = trans.AsQRCodeString();
                 IsVisible = true;
             }
 

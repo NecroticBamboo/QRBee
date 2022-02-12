@@ -9,7 +9,6 @@
         /// Insert userInfo into database
         /// </summary>
         /// <param name="info"> Information to be inserted</param>
-        /// <returns></returns>
         Task<string> PutUserInfo(UserInfo info);
 
         /// <summary>
@@ -19,7 +18,17 @@
         /// <returns>User information</returns>
         Task<UserInfo> GetUserInfo(string email);
 
+        /// <summary>
+        /// Update user record
+        /// </summary>
+        /// <param name="info">New user record</param>
+        /// <returns></returns>
         Task UpdateUser(UserInfo info);
 
+        /// <summary>
+        /// Insert transactionInfo into database
+        /// </summary>
+        /// <param name="info">Information to be inserted</param>
+        Task PutTransactionInfo(TransactionInfo info);
     }
 }

@@ -94,7 +94,8 @@ namespace QRBee.ViewModels
 
         private async void OnRegisterClicked(object obj)
         {
-            using var client = new HttpClient(GetInsecureHandler());
+            //TODO when to dispose the client?
+            var client = new HttpClient(GetInsecureHandler());
             var localSettings = DependencyService.Resolve<ILocalSettings>();
 
             var service = new Core.Client.Client(localSettings.QRBeeApiUrl,client);

@@ -37,12 +37,12 @@ namespace QRBee.ViewModels
             {
                 var scanner = DependencyService.Get<IQRScanner>();
                 var result = await scanner.ScanQR();
-                if (result != null)
-                {
-                    _merchantToClientRequest = MerchantToClientRequest.FromString(result);
-                    Amount = $"{_merchantToClientRequest.Amount:N2}";
-                    IsVisible = true;
-                }
+                if (result == null) 
+                    return;
+
+                _merchantToClientRequest = MerchantToClientRequest.FromString(result);
+                Amount = $"{_merchantToClientRequest.Amount:N2}";
+                IsVisible = true;
             }
             catch (Exception)
             {
@@ -99,21 +99,22 @@ namespace QRBee.ViewModels
         public async void OnGenerateQrClicked(object obj)
         {
 
-            bool answer = await _clientPage.DisplayAlert("Confirmation", "Would you like to accept the offer?", "Yes", "No");
-            if (answer)
-            {
-                var response = new ClientToMerchantResponse
-                {
-                    ClientId = Guid.NewGuid().ToString("D"),
-                    TimeStampUTC = DateTime.UtcNow,
-                    Request = _merchantToClientRequest
-                    
-                };
-                // TODO Create merchant signature.
-                QrCode = response.AsString();
-            }
+            var answer = await _clientPage.DisplayAlert("Confirmation", "Would you like to accept the offer?", "Yes", "No");
+            if (!answer) 
+                return;
 
-            
+            var response = new ClientToMerchantResponse
+            {
+                //TODO get client id from database
+                ClientId = Guid.NewGuid().ToString("D"),
+                TimeStampUTC = DateTime.UtcNow,
+                MerchantRequest = _merchantToClientRequest
+                    
+            };
+            // TODO Create merchant signature.
+            QrCode = response.AsQRCodeString();
+
+
         }
 
     }

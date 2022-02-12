@@ -4,7 +4,13 @@ namespace QRBee.Core.Data
 {
     public record MerchantToClientRequest
     {
-        public string TransactionId
+        public string MerchantId
+        {
+            get;
+            set;
+        }
+
+        public string MerchantTransactionId
         {
             get;
             set;
@@ -38,7 +44,7 @@ namespace QRBee.Core.Data
         /// Convert MerchantToClientRequest to string to be used as QR Code source (along with merchant signature)
         /// </summary>
         /// <returns>String conversion</returns>
-        public string AsString() => $"{TransactionId}|{Name}|{Amount.ToString("0.00", CultureInfo.InvariantCulture)}|{TimeStampUTC:O}";
+        public string AsQRCodeString() => $"{MerchantTransactionId}|{MerchantId}|{Name}|{Amount.ToString("0.00", CultureInfo.InvariantCulture)}|{TimeStampUTC:O}";
 
         /// <summary>
         /// Convert from string
@@ -49,17 +55,18 @@ namespace QRBee.Core.Data
         public static MerchantToClientRequest FromString(string input)
         {
             var s = input.Split('|');
-            if (s.Length != 4)
+            if (s.Length != 5)
             {
-                throw new ApplicationException("Expected 4 elements");
+                throw new ApplicationException("Expected 5 elements");
             }
 
             var res = new MerchantToClientRequest
             {
-                TransactionId = s[0],
-                Name = s[1],
-                Amount = Convert.ToDecimal(s[2], CultureInfo.InvariantCulture),
-                TimeStampUTC = DateTime.ParseExact(s[3],"O",null)
+                MerchantId = s[0],
+                MerchantTransactionId = s[1],
+                Name = s[2],
+                Amount = Convert.ToDecimal(s[3], CultureInfo.InvariantCulture),
+                TimeStampUTC = DateTime.ParseExact(s[4],"O",null)
             };
 
 

@@ -23,5 +23,11 @@ namespace QRBee.Api.Services
         /// <param name="value">Update request</param>
         Task Update(string clientId, RegistrationRequest value);
 
+        /// <summary>
+        /// Handles InsertTransaction request
+        /// </summary>
+        /// <param name="value">Payment request</param>
+        Task InsertTransaction(PaymentRequest value);
+
     }
 }

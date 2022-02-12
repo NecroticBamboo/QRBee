@@ -39,6 +39,12 @@ namespace QRBee.Api.Services
             return _storage.UpdateUser(info);
         }
 
+        public Task InsertTransaction(PaymentRequest value)
+        {
+            var info = Convert(value);
+            return _storage.PutTransactionInfo(info);
+        }
+
         private static void Validate(RegistrationRequest request)
         {
             if (request == null)
@@ -75,6 +81,11 @@ namespace QRBee.Api.Services
         private static UserInfo Convert(RegistrationRequest request)
         {
             return new UserInfo(request.Name, request.Email, request.DateOfBirth);
+        }
+
+        private static TransactionInfo Convert(PaymentRequest request)
+        {
+            return new TransactionInfo(request, DateTime.UtcNow);
         }
 
     }
