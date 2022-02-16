@@ -6,11 +6,9 @@
              xmlns:common="clr-namespace:ZXing.Common;assembly=zxing.portable"
              x:DataType="viewmodels:ClientPageViewModel"
              x:Class="QRBee.Views.ClientPage">
+
     <ContentPage.Content>
         <StackLayout HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
-            <!-- <Label Text="Hello this is a test page." -->
-            <!--     VerticalOptions="CenterAndExpand"  -->
-            <!--     HorizontalOptions="CenterAndExpand" /> -->
             <StackLayout Orientation="Vertical" VerticalOptions="FillAndExpand">
                 <StackLayout Orientation="Vertical">
                     <Label VerticalOptions="FillAndExpand" Text="Amount:"/>
@@ -21,7 +19,8 @@
                     BarcodeFormat="QR_CODE"
                     BarcodeValue="{Binding QrCode}"
                     HorizontalOptions="FillAndExpand"
-                    VerticalOptions="FillAndExpand">
+                    VerticalOptions="FillAndExpand"
+                    IsVisible="{Binding IsQrVisible}">
                     <forms:ZXingBarcodeImageView.BarcodeOptions>
                         <common:EncodingOptions Width="300" Height="300" />
                     </forms:ZXingBarcodeImageView.BarcodeOptions>
@@ -31,10 +30,10 @@
             
             <StackLayout Orientation="Vertical" VerticalOptions="End" Margin="0,0,0,10">
                 <StackLayout Orientation="Horizontal">
-                    <Button  Text="Accept" HorizontalOptions="FillAndExpand" BackgroundColor="DarkGreen" IsVisible="{Binding IsVisible}" Command="{Binding GenerateQrCommand}"/>
-                    <Button  Text="Deny" HorizontalOptions="FillAndExpand" BackgroundColor="DarkRed" IsVisible="{Binding IsVisible}"/>
+                    <Button  Text="Accept" HorizontalOptions="FillAndExpand" BackgroundColor="DarkGreen" IsVisible="{Binding IsAcceptDenyButtonVisible}" Command="{Binding AcceptQrCommand}"/>
+                    <Button  Text="Deny" HorizontalOptions="FillAndExpand" BackgroundColor="DarkRed" IsVisible="{Binding IsAcceptDenyButtonVisible}" Command="{Binding DenyQrCommand}"/>
                 </StackLayout>
-                <Button  Text="Scan me" HorizontalOptions="FillAndExpand" BackgroundColor="Aqua" TextColor="Red" Command="{Binding ScanCommand}"/>
+                <Button  Text="Scan merchant QR Code" HorizontalOptions="FillAndExpand" BackgroundColor="Aqua" TextColor="Red" Command="{Binding ScanCommand}" IsVisible="{Binding IsScanButtonVisible}"/>
             </StackLayout>
 
         </StackLayout>

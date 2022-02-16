@@ -12,13 +12,14 @@ namespace QRBee.ViewModels
 {
     internal class RegisterViewModel: BaseViewModel
     {
+        private readonly ILocalSettings _settings;
         private string _password1;
         private string _password2;
-        public RegisterViewModel()
+        public RegisterViewModel(ILocalSettings localSettings)
         {
+            _settings = localSettings;
             RegisterCommand = new Command(OnRegisterClicked);
 
-            var localSettings = DependencyService.Resolve<ILocalSettings>();
             var settings = localSettings.LoadSettings();
 
             Name           = settings.Name;
@@ -96,14 +97,13 @@ namespace QRBee.ViewModels
         {
             //TODO when to dispose the client?
             var client = new HttpClient(GetInsecureHandler());
-            var localSettings = DependencyService.Resolve<ILocalSettings>();
 
-            var service = new Core.Client.Client(localSettings.QRBeeApiUrl,client);
+            var service = new Core.Client.Client(_settings.QRBeeApiUrl,client);
 
             try
             {
                 //TODO Check if ClientId already in LocalSettings. If Yes update data in database
-                var settings = localSettings.LoadSettings();
+                var settings = _settings.LoadSettings();
 
                 //save local settings
                 settings.CardHolderName = CardHolderName;
@@ -117,7 +117,7 @@ namespace QRBee.ViewModels
                 settings.Name           = Name;
                 settings.PIN = Pin;
 
-                await localSettings.SaveSettings(settings);
+                await _settings.SaveSettings(settings);
 
                 var request = new RegistrationRequest
                 {
@@ -132,9 +132,9 @@ namespace QRBee.ViewModels
                     var response = await service.RegisterAsync(request);
 
                     // Save ClientId to LocalSettings
-                    settings = localSettings.LoadSettings();
+                    settings = _settings.LoadSettings();
                     settings.ClientId = response.ClientId;
-                    await localSettings.SaveSettings(settings);
+                    await _settings.SaveSettings(settings);
 
                     var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
                     await page.DisplayAlert("Success", "You have been registered successfully", "Ok");

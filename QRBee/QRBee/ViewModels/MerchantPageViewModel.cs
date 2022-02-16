@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using QRBee.Core.Data;
+using QRBee.Core.Security;
 using QRBee.Services;
 using Xamarin.Forms;
 
@@ -9,6 +11,9 @@ namespace QRBee.ViewModels
 {
     internal class MerchantPageViewModel : BaseViewModel
     {
+        private readonly IQRScanner _scanner;
+        private readonly ILocalSettings _settings;
+        private readonly ISecurityService _securityService;
         private bool _isVisible;
         private decimal _amount;
         private string _qrCode;
@@ -16,8 +21,11 @@ namespace QRBee.ViewModels
         public Command GenerateQrCommand { get; }
         public Command ScanCommand{ get; }
 
-        public MerchantPageViewModel()
+        public MerchantPageViewModel(IQRScanner scanner, ILocalSettings settings, ISecurityService securityService)
         {
+            _scanner = scanner;
+            _settings = settings;
+            _securityService = securityService;
             ScanCommand = new Command(OnScanButtonClicked);
             GenerateQrCommand = new Command(OnGenerateQrClicked);
             var localSettings = DependencyService.Resolve<ILocalSettings>();
@@ -28,15 +36,13 @@ namespace QRBee.ViewModels
         {
             try
             {
-                var scanner = DependencyService.Get<IQRScanner>();
-                var result = await scanner.ScanQR();
+                var result = await _scanner.ScanQR();
                 if (result == null) 
                     return;
 
                 var client = new HttpClient(GetInsecureHandler());
-                var localSettings = DependencyService.Resolve<ILocalSettings>();
 
-                var service = new Core.Client.Client(localSettings.QRBeeApiUrl, client);
+                var service = new Core.Client.Client(_settings.QRBeeApiUrl, client);
                 var paymentRequest = PaymentRequest.FromString(result);
 
                 //QrCode = null;
@@ -132,7 +138,10 @@ namespace QRBee.ViewModels
                     Amount = Amount,
                     TimeStampUTC = DateTime.UtcNow
                 };
-                // TODO Create merchant signature.
+
+                var merchantSignature = _securityService.Sign(Encoding.UTF8.GetBytes(trans.AsDataForSignature()));
+                trans.MerchantSignature = Convert.ToBase64String(merchantSignature);
+
                 QrCode = trans.AsQRCodeString();
                 IsVisible = true;
             }

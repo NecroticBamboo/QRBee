@@ -11,8 +11,8 @@ namespace QRBee.Views
     {
         public ClientPage()
         {
+            BindingContext = App.GetViewModel<ClientPageViewModel>();
             InitializeComponent();
-            this.BindingContext = new ClientPageViewModel(this);
         }
     }
 }

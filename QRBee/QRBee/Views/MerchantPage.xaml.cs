@@ -8,7 +8,7 @@ namespace QRBee.Views
     {
         public MerchantPage()
         {
-            BindingContext = new MerchantPageViewModel();
+            BindingContext = App.GetViewModel<MerchantPageViewModel>();
             InitializeComponent();
         }
     }

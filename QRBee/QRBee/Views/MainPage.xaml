@@ -8,6 +8,4 @@
         <views:ClientPage Title="Client"/>
         <views:MerchantPage Title="Merchant"/>
   </TabbedPage.Children>
-
-  <!-- <ContentPage Title="Merchant" /> -->
 </TabbedPage>

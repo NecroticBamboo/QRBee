@@ -36,7 +36,9 @@
         /// Convert ClientToMerchantResponse to string to be used as QR Code source (along with client signature)
         /// </summary>
         /// <returns> Converted string</returns>
-        public string AsQRCodeString() => $"{ClientId}|{TimeStampUTC:O}|{MerchantRequest.AsQRCodeString()}";
+        public string AsQRCodeString() => $"{AsDataForSignature()}|{ClientSignature}";
+
+        public string AsDataForSignature() => $"{ClientId}|{TimeStampUTC:O}|{MerchantRequest.AsQRCodeString()}";
 
         /// <summary>
         /// Convert from string
@@ -56,7 +58,8 @@
             {
                 MerchantRequest = MerchantToClientRequest.FromString(string.Join("|", s.Skip(2))),
                 ClientId = s[0],
-                TimeStampUTC = DateTime.ParseExact(s[1], "O", null)
+                TimeStampUTC = DateTime.ParseExact(s[1], "O", null),
+                ClientSignature = s[3]
             };
 
             return res;

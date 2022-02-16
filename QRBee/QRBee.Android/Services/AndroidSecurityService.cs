@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
 using QRBee.Core.Security;
 
-namespace QRBee.Api.Services
+namespace QRBee.Droid.Services
 {
-    internal class SecurityService : SecurityServiceBase
+    internal class AndroidSecurityService : SecurityServiceBase
     {
 
-        public SecurityService(IPrivateKeyHandler privateKeyHandler)
+        public AndroidSecurityService(IPrivateKeyHandler privateKeyHandler)
         : base(privateKeyHandler)
         {
         }
@@ -19,36 +17,6 @@ namespace QRBee.Api.Services
         public override X509Certificate2 CreateCertificate(string subjectName, byte[] rsaPublicKey)
         {
             throw new ApplicationException("Client never issues certificates");
-        }
-
-        /// <summary>
-        /// Generate Client certificate request (i.e. without KeyCertSign usage extension)
-        /// </summary>
-        /// <param name="distinguishedName"></param>
-        /// <param name="rsa"></param>
-        /// <returns></returns>
-        private static CertificateRequest CreateRequest(X500DistinguishedName distinguishedName, RSA rsa)
-        {
-            var request = new CertificateRequest(
-                distinguishedName,
-                rsa,
-                HashAlgorithmName.SHA256,
-                RSASignaturePadding.Pkcs1
-            );
-
-            request.CertificateExtensions.Add(
-                new X509KeyUsageExtension(
-                    X509KeyUsageFlags.DataEncipherment
-                    | X509KeyUsageFlags.KeyEncipherment
-                    | X509KeyUsageFlags.DigitalSignature,
-                    //| X509KeyUsageFlags.KeyCertSign,
-                    false));
-
-
-            // request.CertificateExtensions.Add(
-            //     new X509EnhancedKeyUsageExtension(
-            //         new OidCollection { new Oid("1.3.6.1.5.5.7.3.1") }, false));
-            return request;
         }
 
         private const string CertHeader = "-----BEGIN CERTIFICATE-----";
