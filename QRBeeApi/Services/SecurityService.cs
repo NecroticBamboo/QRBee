@@ -10,6 +10,10 @@ namespace QRBee.Api.Services
     internal class SecurityService : SecurityServiceBase
     {
 
+        private const int CertificateValidityPeriodDays = 365;
+        private const string CertHeader = "-----BEGIN CERTIFICATE-----";
+        private const string CertFooter = "-----END CERTIFICATE-----";
+
         public SecurityService(IPrivateKeyHandler privateKeyHandler)
         : base(privateKeyHandler)
         {
@@ -18,7 +22,20 @@ namespace QRBee.Api.Services
         /// <inheritdoc/>
         public override X509Certificate2 CreateCertificate(string subjectName, byte[] rsaPublicKey)
         {
-            throw new ApplicationException("Client never issues certificates");
+            using var rsa = new RSACryptoServiceProvider();
+            rsa.ImportRSAPublicKey(rsaPublicKey, out _);
+
+            var distinguishedName = new X500DistinguishedName($"CN={subjectName}");
+            var req = CreateClientCertRequest(distinguishedName, rsa);
+
+            var pk = PrivateKeyHandler.LoadPrivateKey();
+            var clientCert = req.Create(pk,
+                DateTimeOffset.UtcNow - TimeSpan.FromDays(1),
+                DateTimeOffset.UtcNow + TimeSpan.FromDays(CertificateValidityPeriodDays),
+                Guid.NewGuid()
+                    .ToByteArray());
+
+            return clientCert;
         }
 
         /// <summary>
@@ -27,7 +44,7 @@ namespace QRBee.Api.Services
         /// <param name="distinguishedName"></param>
         /// <param name="rsa"></param>
         /// <returns></returns>
-        private static CertificateRequest CreateRequest(X500DistinguishedName distinguishedName, RSA rsa)
+        private static CertificateRequest CreateClientCertRequest(X500DistinguishedName distinguishedName, RSA rsa)
         {
             var request = new CertificateRequest(
                 distinguishedName,
@@ -41,18 +58,10 @@ namespace QRBee.Api.Services
                     X509KeyUsageFlags.DataEncipherment
                     | X509KeyUsageFlags.KeyEncipherment
                     | X509KeyUsageFlags.DigitalSignature,
-                    //| X509KeyUsageFlags.KeyCertSign,
                     false));
 
-
-            // request.CertificateExtensions.Add(
-            //     new X509EnhancedKeyUsageExtension(
-            //         new OidCollection { new Oid("1.3.6.1.5.5.7.3.1") }, false));
             return request;
         }
-
-        private const string CertHeader = "-----BEGIN CERTIFICATE-----";
-        private const string CertFooter = "-----END CERTIFICATE-----";
 
         /// <inheritdoc/>
         public override X509Certificate2 Deserialize(string pemData)

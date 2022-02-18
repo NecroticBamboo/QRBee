@@ -1,4 +1,6 @@
-﻿namespace QRBee.Core.Data
+﻿using QRBee.Core.Security;
+
+namespace QRBee.Core.Data
 {
     public record RegistrationRequest
     {
@@ -20,7 +22,7 @@
             set;
         }
 
-        public string CertificateRequest
+        public ReadableCertificateRequest CertificateRequest
         {
             get;
             set;

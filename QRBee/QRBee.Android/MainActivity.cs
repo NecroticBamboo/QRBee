@@ -55,6 +55,7 @@ namespace QRBee.Droid
                 .AddSingleton<ISecurityService,AndroidSecurityService>()
                 .AddSingleton<ILocalSettings, LocalSettings>()
                 .AddSingleton<IQRScanner, QRScannerService>()
+                .AddSingleton<IPrivateKeyHandler, AndroidPrivateKeyHandler>()
                 ;
         }
 

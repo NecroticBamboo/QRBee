@@ -5,7 +5,7 @@ using QRBee.Core.Data;
 namespace QRBee.Api.Services
 {
     /// <summary>
-    /// QRBeeAPI interface
+    /// QRBeeAPIService interface
     /// </summary>
     public interface IQRBeeAPI
     {

@@ -4,6 +4,7 @@ using MongoDB.Driver;
 using QRBee.Api;
 using QRBee.Api.Services;
 using QRBee.Api.Services.Database;
+using QRBee.Core.Security;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,10 +25,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services
-    .AddSingleton<IQRBeeAPI,QRBeeAPI>()
+    .AddSingleton<IQRBeeAPI,QRBeeAPIService>()
     .AddSingleton<IStorage, Storage>()
     .Configure<DatabaseSettings>(builder.Configuration.GetSection("QRBeeDatabase"))
     .AddSingleton<IMongoClient>( cfg => new MongoClient(cfg.GetRequiredService<IOptions<DatabaseSettings>>().Value.ToMongoDbSettings()))
+    .AddSingleton<IPrivateKeyHandler, ServerPrivateKeyHandler>()
+    .AddSingleton<ISecurityService, SecurityService>()
     ;
 
 var app = builder.Build();

@@ -1,14 +1,17 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Javax.Xml.Transform;
 using QRBee.Core.Security;
 
-namespace QRBee.Api.Services
+namespace QRBee.Droid.Services
 {
     /// <summary>
     /// Private key handler for API server
     /// </summary>
-    public class ServerPrivateKeyHandler : IPrivateKeyHandler
+    public class AndroidPrivateKeyHandler : IPrivateKeyHandler
     {
         private X509Certificate2? _certificate;
         private readonly object   _syncObject = new object();
@@ -32,7 +35,7 @@ namespace QRBee.Api.Services
             // locking used to make sure that only one thread generating a private key
             lock (_syncObject)
             {
-                var pk = CreateSelfSignedServerCertificate(subjectName ?? CommonName);
+                var pk = CreateSelfSignedClientCertificate(subjectName ?? CommonName);
                 var pkcs12data = pk.Export(X509ContentType.Pfx, CertificatePassword);
                 File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
@@ -46,7 +49,6 @@ namespace QRBee.Api.Services
         /// <inheritdoc/>
         public ReadableCertificateRequest CreateCertificateRequest()
         {
-            //TODO in fact server should create certificate request in standard format if we ever want to get externally sighed certificate.
             var pk = LoadPrivateKey();
             var rsa = pk.GetRSAPublicKey();
 
@@ -63,46 +65,24 @@ namespace QRBee.Api.Services
             return request;
         }
 
-        //private static string AsCsr(CertificateRequest request)
-        //{
-        //    // https://stackoverflow.com/questions/65943968/how-to-convert-a-csr-text-file-into-net-core-standard-certificaterequest-for-s
-
-        //    var encoded = request.CreateSigningRequest();
-        //    var payload = Convert.ToBase64String(encoded, Base64FormattingOptions.InsertLineBreaks);
-        //    using var stream = new MemoryStream();
-        //    using (var writer = new StreamWriter(stream, System.Text.Encoding.UTF8, 512, true))
-        //    {
-        //        writer.WriteLine("-----BEGIN CERTIFICATE REQUEST-----");
-        //        writer.WriteLine(payload);
-        //        writer.WriteLine("-----END CERTIFICATE REQUEST-----");
-        //        writer.Flush();
-        //    }
-
-        //    stream.Position = 0;
-        //    using (var reader = new StreamReader(stream))
-        //    {
-        //        return reader.ReadToEnd();
-        //    }
-        //}
-
         /// <summary>
         /// Generate EXPORTABLE certificate
         /// </summary>
         /// <param name="subjectName"></param>
         /// <returns></returns>
-        private X509Certificate2 CreateSelfSignedServerCertificate(string subjectName)
+        private X509Certificate2 CreateSelfSignedClientCertificate(string subjectName)
         {
             // https://stackoverflow.com/questions/42786986/how-to-create-a-valid-self-signed-x509certificate2-programmatically-not-loadin
 
             var distinguishedName = new X500DistinguishedName($"CN={subjectName}");
 
-            using RSA rsa = RSA.Create(RSABits);
-            var request = CreateClientCertificateRequest(distinguishedName, rsa);
+            using var rsa = RSA.Create(RSABits);
+            var request = CreateRequest(distinguishedName, rsa);
 
             var certificate = request.CreateSelfSigned(
                 new DateTimeOffset(DateTime.UtcNow.AddDays(-1)),
                 new DateTimeOffset(DateTime.UtcNow.AddDays(CertificateValidityDays))
-            );
+                );
 
             return certificate;
         }
@@ -113,8 +93,9 @@ namespace QRBee.Api.Services
         /// <param name="distinguishedName"></param>
         /// <param name="rsa"></param>
         /// <returns></returns>
-        private static CertificateRequest CreateClientCertificateRequest(X500DistinguishedName distinguishedName, RSA rsa)
+        private static CertificateRequest CreateRequest(X500DistinguishedName distinguishedName, RSA rsa)
         {
+            //TODO not supported on Android
             var request = new CertificateRequest(
                 distinguishedName,
                 rsa,

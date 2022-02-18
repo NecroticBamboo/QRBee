@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using QRBee.Core;
 using QRBee.Core.Data;
+using QRBee.Core.Security;
 using QRBee.Services;
 using QRBee.Views;
 using Xamarin.Forms;
@@ -13,15 +14,18 @@ namespace QRBee.ViewModels
     internal class RegisterViewModel: BaseViewModel
     {
         private readonly ILocalSettings _settings;
+        private readonly IPrivateKeyHandler _privateKeyHandler;
+        private readonly ISecurityService _securityService;
         private string _password1;
         private string _password2;
-        public RegisterViewModel(ILocalSettings localSettings)
+        public RegisterViewModel(ILocalSettings localSettings, IPrivateKeyHandler privateKeyHandler, ISecurityService securityService)
         {
             _settings = localSettings;
+            _privateKeyHandler = privateKeyHandler;
+            _securityService = securityService;
             RegisterCommand = new Command(OnRegisterClicked);
 
             var settings = localSettings.LoadSettings();
-
             Name           = settings.Name;
             Email          = settings.Email;
             DateOfBirth    = settings.DateOfBirth;
@@ -115,15 +119,21 @@ namespace QRBee.ViewModels
                 settings.IssueNo        = IssueNo;
                 settings.ValidFrom      = ValidFrom;
                 settings.Name           = Name;
-                settings.PIN = Pin;
+                settings.PIN            = Pin;
 
                 await _settings.SaveSettings(settings);
+
+                if (!_privateKeyHandler.Exists())
+                {
+                    _privateKeyHandler.GeneratePrivateKey(settings.Name);
+                }
 
                 var request = new RegistrationRequest
                 {
                     DateOfBirth = DateOfBirth.ToString("yyyy-MM-dd"),
                     Email = Email,
                     Name = Name,
+                    CertificateRequest = _privateKeyHandler.CreateCertificateRequest(),
                     RegisterAsMerchant = false
                 };
 
@@ -135,6 +145,9 @@ namespace QRBee.ViewModels
                     settings = _settings.LoadSettings();
                     settings.ClientId = response.ClientId;
                     await _settings.SaveSettings(settings);
+
+                    // Attach certificate to privateKey (replace self-sighed with server issued certificate)
+                    _privateKeyHandler.AttachCertificate(_securityService.Deserialize(response.Certificate));
 
                     var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
                     await page.DisplayAlert("Success", "You have been registered successfully", "Ok");

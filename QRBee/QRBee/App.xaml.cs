@@ -30,9 +30,7 @@ namespace QRBee
             addPlatformServices?.Invoke(services);
 
             // TODO: Add core services here
-            services
-                .AddSingleton<IPrivateKeyHandler, ClientPrivateKeyHandler>()
-                ;
+            
 
             // Add ViewModels
             services
