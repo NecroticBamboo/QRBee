@@ -51,6 +51,7 @@
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
     <MtouchLink>None</MtouchLink>
     <MtouchInterpreter>-all</MtouchInterpreter>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <DebugType>none</DebugType>
@@ -133,10 +134,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Plugin.Fingerprint">
-      <Version>2.1.4</Version>
+      <Version>2.1.5</Version>
     </PackageReference>
-    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2244" />
-    <PackageReference Include="Xamarin.Essentials" Version="1.7.0" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.2337" />
+    <PackageReference Include="Xamarin.Essentials" Version="1.7.1" />
     <PackageReference Include="ZXing.Net.Mobile">
       <Version>2.4.1</Version>
     </PackageReference>

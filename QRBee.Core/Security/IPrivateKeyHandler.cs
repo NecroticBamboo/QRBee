@@ -18,13 +18,13 @@ namespace QRBee.Core.Security
         /// </summary>
         /// <param name="subjectName"></param>
         /// <returns>Certificate request to be sent to CA in PEM format</returns>
-        ReadableCertificateRequest GeneratePrivateKey(string? subjectName = null);
+        ReadableCertificateRequest GeneratePrivateKey(string subjectName = null);
 
         /// <summary>
         /// Re-create certificate request if CA response was not received in time.
         /// </summary>
         /// <returns>Certificate request to be sent to CA in PEM format</returns>
-        ReadableCertificateRequest CreateCertificateRequest();
+        ReadableCertificateRequest CreateCertificateRequest(string subjectName);
 
         /// <summary>
         /// Attach CA-generated public key certificate to the private key

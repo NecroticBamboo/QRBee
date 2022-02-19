@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using QRBee.Api.Services.Database;
@@ -49,7 +50,9 @@ namespace QRBee.Api.Services
 
             var clientId = await _storage.PutUserInfo(info);
             var clientCertificate =  _securityService.CreateCertificate(clientId,System.Convert.FromBase64String(request.CertificateRequest.RsaPublicKey));
-            //TODO save certificate to certificate mongoDB collection
+            
+            var convertedClientCertificate = Convert(clientCertificate, clientId);
+            await _storage.InsertCertificate(convertedClientCertificate);
 
             return new RegistrationResponse
             {
@@ -122,6 +125,18 @@ namespace QRBee.Api.Services
         private static TransactionInfo Convert(PaymentRequest request)
         {
             return new TransactionInfo(request, DateTime.UtcNow);
+        }
+
+        private CertificateInfo Convert(X509Certificate2 certificate, string clientId)
+        {
+            var convertedCertificate = _securityService.Serialize(certificate);
+            return new CertificateInfo
+            {
+                Id              = certificate.SerialNumber, 
+                ClientId        = clientId, 
+                Certificate     = convertedCertificate, 
+                ServerTimeStamp = DateTime.UtcNow
+            };
         }
 
     }

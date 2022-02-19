@@ -14,11 +14,10 @@ namespace QRBee.Api.Services
         private readonly object   _syncObject = new object();
 
         private const string FileName             = "private_key.p12";
-        protected string CommonName { get; set; }
         private const int RSABits                 = 2048;
         private const int CertificateValidityDays = 3650;
-      
-        protected string CertificatePassword { get; set; }
+
+        private const string VeryBadNeverUseCertificatePassword = "+ñèbòFëc×ŽßRúß¿ãçPN";
 
         private string PrivateKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{FileName}";
 
@@ -27,33 +26,38 @@ namespace QRBee.Api.Services
             => File.Exists(PrivateKeyFileName);
 
         /// <inheritdoc/>
-        public ReadableCertificateRequest GeneratePrivateKey(string? subjectName)
+        public ReadableCertificateRequest GeneratePrivateKey(string subjectName)
         {
             // locking used to make sure that only one thread generating a private key
             lock (_syncObject)
             {
-                var pk = CreateSelfSignedServerCertificate(subjectName ?? CommonName);
-                var pkcs12data = pk.Export(X509ContentType.Pfx, CertificatePassword);
+                var pk = CreateSelfSignedServerCertificate(subjectName);
+                var pkcs12data = pk.Export(X509ContentType.Pfx, VeryBadNeverUseCertificatePassword);
                 File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
                 _certificate?.Dispose();
-                _certificate = new X509Certificate2(pkcs12data, CertificatePassword);
+                _certificate = new X509Certificate2(pkcs12data, VeryBadNeverUseCertificatePassword);
             }
 
-            return CreateCertificateRequest();
+            return CreateCertificateRequest(subjectName);
         }
 
         /// <inheritdoc/>
-        public ReadableCertificateRequest CreateCertificateRequest()
+        public ReadableCertificateRequest CreateCertificateRequest(string subjectName)
         {
             //TODO in fact server should create certificate request in standard format if we ever want to get externally sighed certificate.
             var pk = LoadPrivateKey();
             var rsa = pk.GetRSAPublicKey();
 
+            if (rsa == null)
+            {
+                throw new ApplicationException("Object missing public key.");
+            }
+
             var request = new ReadableCertificateRequest
             {
                 RsaPublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
-                SubjectName = pk.SubjectName.Name
+                SubjectName = subjectName
             };
             var data = Encoding.UTF8.GetBytes(request.AsDataForSignature());
 
@@ -147,7 +151,7 @@ namespace QRBee.Api.Services
                 if (!Exists())
                     throw new CryptographicException("PrivateKey does not exist");
 
-                _certificate = new X509Certificate2(PrivateKeyFileName, CertificatePassword);
+                _certificate = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUseCertificatePassword);
                 return _certificate;
             }
         }
@@ -159,14 +163,14 @@ namespace QRBee.Api.Services
             // https://stackoverflow.com/questions/18462064/associate-a-private-key-with-the-x509certificate2-class-in-net
 
             // we can't use LoadPrivateKey here as it creating non-exportable key
-            var pk = new X509Certificate2(PrivateKeyFileName, CertificatePassword, X509KeyStorageFlags.Exportable);
+            var pk = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUseCertificatePassword, X509KeyStorageFlags.Exportable);
             using var rsa = pk.GetRSAPrivateKey();
             if (rsa == null)
                 throw new CryptographicException("Can't get PrivateKey");
 
             var newPk = cert.CopyWithPrivateKey(rsa);
 
-            var pkcs12data = newPk.Export(X509ContentType.Pfx, CertificatePassword);
+            var pkcs12data = newPk.Export(X509ContentType.Pfx, VeryBadNeverUseCertificatePassword);
             File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
             lock ( _syncObject )

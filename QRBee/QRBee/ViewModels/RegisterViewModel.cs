@@ -133,7 +133,7 @@ namespace QRBee.ViewModels
                     DateOfBirth = DateOfBirth.ToString("yyyy-MM-dd"),
                     Email = Email,
                     Name = Name,
-                    CertificateRequest = _privateKeyHandler.CreateCertificateRequest(),
+                    CertificateRequest = _privateKeyHandler.CreateCertificateRequest(Email),
                     RegisterAsMerchant = false
                 };
 

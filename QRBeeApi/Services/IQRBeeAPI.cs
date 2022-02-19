@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Mvc;
 using QRBee.Core;
 using QRBee.Core.Data;
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using QRBee.Api.Controllers;
 
@@ -99,6 +100,51 @@ namespace QRBee.Api.Services.Database
             }
 
             return cursor.Current.FirstOrDefault();
+        }
+
+        public async Task InsertCertificate(CertificateInfo info)
+        {
+            var collection = _database.GetCollection<CertificateInfo>("Certificates");
+
+            if (info.Id == null)
+            {
+                throw new ApplicationException("Info Id is null.");
+            }
+
+            var certificate = await TryGetCertificateInfo(info.Id);
+
+            if (certificate == null)
+            {
+                await collection.InsertOneAsync(info);
+                _logger.LogInformation($"Inserted new certificate with ID: {info.Id}");
+                return;
+            }
+
+            _logger.LogInformation($"Found certificate with ID: {info.Id}");
+
+        }
+
+        /// <summary>
+        /// Try to find if the Certificate already exists in the database
+        /// </summary>
+        /// <param name="id">parameter by which to find CertificateInfo</param>
+        /// <returns>null if certificate doesn't exist or CertificateInfo</returns>
+        private async Task<CertificateInfo?> TryGetCertificateInfo(string id)
+        {
+            var collection = _database.GetCollection<CertificateInfo>("Transactions");
+            using var cursor = await collection.FindAsync($"{{ Id: \"{id}\" }}");
+            if (!await cursor.MoveNextAsync())
+            {
+                return null;
+            }
+
+            return cursor.Current.FirstOrDefault();
+        }
+
+        public async Task<CertificateInfo> GetCertificateInfo(string id)
+        {
+            var certificate = await TryGetCertificateInfo(id);
+            return certificate ?? throw new ApplicationException($"Certificate with Id: {id} not found.");
         }
     }
 }

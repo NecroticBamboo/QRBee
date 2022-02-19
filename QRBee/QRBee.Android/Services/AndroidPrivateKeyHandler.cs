@@ -13,49 +13,55 @@ namespace QRBee.Droid.Services
     /// </summary>
     public class AndroidPrivateKeyHandler : IPrivateKeyHandler
     {
-        private X509Certificate2? _certificate;
+        private X509Certificate2 _certificate;
         private readonly object   _syncObject = new object();
 
-        private const string FileName             = "private_key.p12";
-        protected string CommonName { get; set; }
+        private const string RawRsaKeyFileName = "rsa.key";
+        private const string SignedCertificateFileName = "private_key.p12";
+        private const string VeryBadNeverUsePrivateKeyPassword = "’³¶¾]Ô<N◄¾♪¢ :6TyŽ÷ç♦Mô¶–²ùPÎJj";
+        private const int EncryptionIterationCount = 534;
+
         private const int RSABits                 = 2048;
         private const int CertificateValidityDays = 3650;
       
-        protected string CertificatePassword { get; set; }
-
-        private string PrivateKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{FileName}";
+        private string PrivateKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{SignedCertificateFileName}";
+        private string PrivateRsaKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{RawRsaKeyFileName}";
 
         /// <inheritdoc/>
         public bool Exists()
             => File.Exists(PrivateKeyFileName);
 
         /// <inheritdoc/>
-        public ReadableCertificateRequest GeneratePrivateKey(string? subjectName)
+        public ReadableCertificateRequest GeneratePrivateKey(string subjectName)
         {
             // locking used to make sure that only one thread generating a private key
             lock (_syncObject)
             {
-                var pk = CreateSelfSignedClientCertificate(subjectName ?? CommonName);
-                var pkcs12data = pk.Export(X509ContentType.Pfx, CertificatePassword);
-                File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
+                if ( File.Exists(PrivateRsaKeyFileName) )
+                    File.Delete(PrivateRsaKeyFileName);
 
-                _certificate?.Dispose();
-                _certificate = new X509Certificate2(pkcs12data, CertificatePassword);
+                using var rsa = RSA.Create(RSABits);
+                var bytes = rsa.ExportEncryptedPkcs8PrivateKey(VeryBadNeverUsePrivateKeyPassword, new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, EncryptionIterationCount));
+                File.WriteAllBytes(PrivateRsaKeyFileName, bytes);
             }
 
-            return CreateCertificateRequest();
+            return CreateCertificateRequest(subjectName);
         }
 
         /// <inheritdoc/>
-        public ReadableCertificateRequest CreateCertificateRequest()
+        public ReadableCertificateRequest CreateCertificateRequest(string subjectName)
         {
-            var pk = LoadPrivateKey();
-            var rsa = pk.GetRSAPublicKey();
+            if (File.Exists(PrivateRsaKeyFileName))
+                throw new ApplicationException("Private key does not exist");
+                
+            var bytes = File.ReadAllBytes(PrivateRsaKeyFileName);
+            using var rsa = RSA.Create(RSABits);
+            rsa.ImportEncryptedPkcs8PrivateKey(VeryBadNeverUsePrivateKeyPassword, bytes, out _);
 
             var request = new ReadableCertificateRequest
             {
                 RsaPublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
-                SubjectName = pk.SubjectName.Name
+                SubjectName = subjectName
             };
             var data = Encoding.UTF8.GetBytes(request.AsDataForSignature());
 
@@ -128,7 +134,7 @@ namespace QRBee.Droid.Services
                 if (!Exists())
                     throw new CryptographicException("PrivateKey does not exist");
 
-                _certificate = new X509Certificate2(PrivateKeyFileName, CertificatePassword);
+                _certificate = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUsePrivateKeyPassword);
                 return _certificate;
             }
         }
@@ -140,14 +146,14 @@ namespace QRBee.Droid.Services
             // https://stackoverflow.com/questions/18462064/associate-a-private-key-with-the-x509certificate2-class-in-net
 
             // we can't use LoadPrivateKey here as it creating non-exportable key
-            var pk = new X509Certificate2(PrivateKeyFileName, CertificatePassword, X509KeyStorageFlags.Exportable);
+            var pk = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUsePrivateKeyPassword, X509KeyStorageFlags.Exportable);
             using var rsa = pk.GetRSAPrivateKey();
             if (rsa == null)
                 throw new CryptographicException("Can't get PrivateKey");
 
             var newPk = cert.CopyWithPrivateKey(rsa);
 
-            var pkcs12data = newPk.Export(X509ContentType.Pfx, CertificatePassword);
+            var pkcs12data = newPk.Export(X509ContentType.Pfx, VeryBadNeverUsePrivateKeyPassword);
             File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
             lock ( _syncObject )
