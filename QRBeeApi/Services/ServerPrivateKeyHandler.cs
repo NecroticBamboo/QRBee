@@ -19,7 +19,7 @@ namespace QRBee.Api.Services
 
         private const string VeryBadNeverUseCertificatePassword = "+ñèbòFëc×ŽßRúß¿ãçPN";
 
-        private string PrivateKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{FileName}";
+        private string PrivateKeyFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{FileName}";
 
         /// <inheritdoc/>
         public bool Exists()
@@ -56,7 +56,7 @@ namespace QRBee.Api.Services
 
             var request = new ReadableCertificateRequest
             {
-                RsaPublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
+                RsaPublicKey = ExportKey(rsa,false),
                 SubjectName = subjectName
             };
             var data = Encoding.UTF8.GetBytes(request.AsDataForSignature());
@@ -66,6 +66,26 @@ namespace QRBee.Api.Services
             request.Signature = Convert.ToBase64String(signature);
             return request;
         }
+
+        private static StringRSAParameters ExportKey(RSA rsa, bool includePrivateKey)
+        {
+            var rsaParameters = rsa.ExportParameters(includePrivateKey);
+            var stringParameters = new StringRSAParameters
+            {
+                StringExponent = SafeConvertToBase64(rsaParameters.Exponent),
+                StringModulus  = SafeConvertToBase64(rsaParameters.Modulus),
+                StringP        = SafeConvertToBase64(rsaParameters.P),
+                StringQ        = SafeConvertToBase64(rsaParameters.Q),
+                StringDP       = SafeConvertToBase64(rsaParameters.DP),
+                StringDQ       = SafeConvertToBase64(rsaParameters.DQ),
+                StringInverseQ = SafeConvertToBase64(rsaParameters.InverseQ),
+                StringD        = SafeConvertToBase64(rsaParameters.D)
+            };
+            return stringParameters;
+        }
+
+        private static string SafeConvertToBase64(byte[]? bytes) => bytes == null ? "" : Convert.ToBase64String(bytes);
+
 
         //private static string AsCsr(CertificateRequest request)
         //{
@@ -149,7 +169,7 @@ namespace QRBee.Api.Services
                     return _certificate;
 
                 if (!Exists())
-                    throw new CryptographicException("PrivateKey does not exist");
+                    GeneratePrivateKey("QRBeeCA");
 
                 _certificate = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUseCertificatePassword);
                 return _certificate;

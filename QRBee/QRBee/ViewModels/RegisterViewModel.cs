@@ -103,11 +103,13 @@ namespace QRBee.ViewModels
             var client = new HttpClient(GetInsecureHandler());
 
             var service = new Core.Client.Client(_settings.QRBeeApiUrl,client);
-
+            Settings settings;
+            RegistrationRequest request;
             try
             {
                 //TODO Check if ClientId already in LocalSettings. If Yes update data in database
-                var settings = _settings.LoadSettings();
+                
+                settings = _settings.LoadSettings();
 
                 //save local settings
                 settings.CardHolderName = CardHolderName;
@@ -128,15 +130,25 @@ namespace QRBee.ViewModels
                     _privateKeyHandler.GeneratePrivateKey(settings.Name);
                 }
 
-                var request = new RegistrationRequest
+                request = new RegistrationRequest
                 {
-                    DateOfBirth = DateOfBirth.ToString("yyyy-MM-dd"),
-                    Email = Email,
-                    Name = Name,
+                    DateOfBirth        = DateOfBirth.ToString("yyyy-MM-dd"),
+                    Email              = Email,
+                    Name               = Name,
                     CertificateRequest = _privateKeyHandler.CreateCertificateRequest(Email),
                     RegisterAsMerchant = false
                 };
+            }
+            catch (Exception e)
+            {
+                //TODO: delete exception message in error message
+                var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                await page.DisplayAlert("Error", $"The ClientSide isn't working: {e.Message}", "Ok");
+                return;
+            }
 
+            try
+            {
                 if (!settings.IsRegistered)
                 {
                     var response = await service.RegisterAsync(request);
@@ -158,8 +170,6 @@ namespace QRBee.ViewModels
                     var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
                     await page.DisplayAlert("Success", "Your data has been updated successfully", "Ok");
                 }
-
-
 
                 await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
             }

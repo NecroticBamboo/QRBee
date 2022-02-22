@@ -24,8 +24,8 @@ namespace QRBee.Droid.Services
         private const int RSABits                 = 2048;
         private const int CertificateValidityDays = 3650;
       
-        private string PrivateKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{SignedCertificateFileName}";
-        private string PrivateRsaKeyFileName => $"{System.Environment.SpecialFolder.LocalApplicationData}/{RawRsaKeyFileName}";
+        private string PrivateKeyFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{SignedCertificateFileName}";
+        private string PrivateRsaKeyFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{RawRsaKeyFileName}";
 
         /// <inheritdoc/>
         public bool Exists()
@@ -41,26 +41,51 @@ namespace QRBee.Droid.Services
                     File.Delete(PrivateRsaKeyFileName);
 
                 using var rsa = RSA.Create(RSABits);
-                var bytes = rsa.ExportEncryptedPkcs8PrivateKey(VeryBadNeverUsePrivateKeyPassword, new PbeParameters(PbeEncryptionAlgorithm.Aes256Cbc, HashAlgorithmName.SHA256, EncryptionIterationCount));
+
+                var s = ExportKeyToJson(rsa,true);
+
+                var bytes = CryptoHelper.EncryptStringAES(s, VeryBadNeverUsePrivateKeyPassword);
                 File.WriteAllBytes(PrivateRsaKeyFileName, bytes);
             }
 
             return CreateCertificateRequest(subjectName);
         }
 
+        private static string ExportKeyToJson(RSA rsa,bool includePrivateKey)
+        {
+            //Workaround for absence of half of cryptography subsystem in Mono
+            var stringParameters = ExportKey(rsa, includePrivateKey);
+            var s = stringParameters.ConvertToJson();
+            return s;
+        }
+
+        private static StringRSAParameters ExportKey(RSA rsa, bool includePrivateKey)
+        {
+            var rsaParameters = rsa.ExportParameters(includePrivateKey);
+            var stringParameters = new StringRSAParameters
+            {
+                StringExponent = SafeConvertToBase64(rsaParameters.Exponent),
+                StringModulus  = SafeConvertToBase64(rsaParameters.Modulus),
+                StringP        = SafeConvertToBase64(rsaParameters.P),
+                StringQ        = SafeConvertToBase64(rsaParameters.Q),
+                StringDP       = SafeConvertToBase64(rsaParameters.DP),
+                StringDQ       = SafeConvertToBase64(rsaParameters.DQ),
+                StringInverseQ = SafeConvertToBase64(rsaParameters.InverseQ),
+                StringD        = SafeConvertToBase64(rsaParameters.D)
+            };
+            return stringParameters;
+        }
+        
+        private static string SafeConvertToBase64(byte[] bytes) => bytes == null ? "" : Convert.ToBase64String(bytes);
+
         /// <inheritdoc/>
         public ReadableCertificateRequest CreateCertificateRequest(string subjectName)
         {
-            if (File.Exists(PrivateRsaKeyFileName))
-                throw new ApplicationException("Private key does not exist");
-                
-            var bytes = File.ReadAllBytes(PrivateRsaKeyFileName);
-            using var rsa = RSA.Create(RSABits);
-            rsa.ImportEncryptedPkcs8PrivateKey(VeryBadNeverUsePrivateKeyPassword, bytes, out _);
+            using var rsa = LoadRsaPrivateKey();
 
             var request = new ReadableCertificateRequest
             {
-                RsaPublicKey = Convert.ToBase64String(rsa.ExportRSAPublicKey()),
+                RsaPublicKey = ExportKey(rsa,false),
                 SubjectName = subjectName
             };
             var data = Encoding.UTF8.GetBytes(request.AsDataForSignature());
@@ -144,12 +169,7 @@ namespace QRBee.Droid.Services
         {
             // heavily modified version of:
             // https://stackoverflow.com/questions/18462064/associate-a-private-key-with-the-x509certificate2-class-in-net
-
-            // we can't use LoadPrivateKey here as it creating non-exportable key
-            var pk = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUsePrivateKeyPassword, X509KeyStorageFlags.Exportable);
-            using var rsa = pk.GetRSAPrivateKey();
-            if (rsa == null)
-                throw new CryptographicException("Can't get PrivateKey");
+            using var rsa = LoadRsaPrivateKey();
 
             var newPk = cert.CopyWithPrivateKey(rsa);
 
@@ -164,5 +184,30 @@ namespace QRBee.Droid.Services
             }
         }
 
+        private RSA LoadRsaPrivateKey()
+        {
+            var bytes = File.ReadAllBytes(PrivateRsaKeyFileName);
+            var s = CryptoHelper.DecryptStringAES(bytes, VeryBadNeverUsePrivateKeyPassword);
+
+            var stringParameters = StringRSAParameters.ConvertFromJson(s);
+            var rsaParameters = new RSAParameters
+            {
+                Exponent = SafeConvertFromBase64(stringParameters.StringExponent),
+                Modulus  = SafeConvertFromBase64(stringParameters.StringModulus),
+                P        = SafeConvertFromBase64(stringParameters.StringP),
+                Q        = SafeConvertFromBase64(stringParameters.StringQ),
+                DP       = SafeConvertFromBase64(stringParameters.StringDP),
+                DQ       = SafeConvertFromBase64(stringParameters.StringDQ),
+                InverseQ = SafeConvertFromBase64(stringParameters.StringInverseQ),
+                D        = SafeConvertFromBase64(stringParameters.StringD)
+            };
+
+            var rsa = RSA.Create(rsaParameters);
+            if (rsa == null)
+                throw new CryptographicException("Can't get PrivateKey");
+            return rsa;
+        }
+
+        private static byte[] SafeConvertFromBase64(string s) => string.IsNullOrWhiteSpace(s) ? null : Convert.FromBase64String(s);
     }
 }

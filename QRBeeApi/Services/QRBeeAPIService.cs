@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -49,7 +50,7 @@ namespace QRBee.Api.Services
             var info = Convert(request);
 
             var clientId = await _storage.PutUserInfo(info);
-            var clientCertificate =  _securityService.CreateCertificate(clientId,System.Convert.FromBase64String(request.CertificateRequest.RsaPublicKey));
+            var clientCertificate =  _securityService.CreateCertificate(clientId,Encoding.UTF8.GetBytes(request.CertificateRequest.RsaPublicKey.ConvertToJson()));
             
             var convertedClientCertificate = Convert(clientCertificate, clientId);
             await _storage.InsertCertificate(convertedClientCertificate);
@@ -107,15 +108,44 @@ namespace QRBee.Api.Services
             }
 
             //Check digital signature
-            var verified = _securityService.Verify(
-                Encoding.UTF8.GetBytes(certificateRequest.AsDataForSignature()),
-                Encoding.UTF8.GetBytes(certificateRequest.Signature),
-                _privateKeyHandler.LoadPrivateKey());
+            using var rsa = LoadRsaPublicKey(certificateRequest.RsaPublicKey);
+
+            var data = Encoding.UTF8.GetBytes(certificateRequest.AsDataForSignature());
+            var signature = System.Convert.FromBase64String(certificateRequest.Signature);
+            var verified = rsa.VerifyData(
+                data,
+                signature,
+                HashAlgorithmName.SHA256, 
+                RSASignaturePadding.Pkcs1
+                );
+
             if (!verified)
             {
                 throw new ApplicationException($"Digital signature is not valid.");
             }
         }
+
+        private static RSA LoadRsaPublicKey(StringRSAParameters stringParameters)
+        {
+            var rsaParameters = new RSAParameters
+            {
+                Exponent = SafeConvertFromBase64(stringParameters.StringExponent),
+                Modulus  = SafeConvertFromBase64(stringParameters.StringModulus),
+                P        = SafeConvertFromBase64(stringParameters.StringP),
+                Q        = SafeConvertFromBase64(stringParameters.StringQ),
+                DP       = SafeConvertFromBase64(stringParameters.StringDP),
+                DQ       = SafeConvertFromBase64(stringParameters.StringDQ),
+                InverseQ = SafeConvertFromBase64(stringParameters.StringInverseQ),
+                D        = SafeConvertFromBase64(stringParameters.StringD)
+            };
+
+            var rsa = RSA.Create(rsaParameters);
+            if (rsa == null)
+                throw new CryptographicException("Can't create public key");
+            return rsa;
+        }
+
+        private static byte[]? SafeConvertFromBase64(string? s) => string.IsNullOrWhiteSpace(s) ? null : System.Convert.FromBase64String(s);
 
         private static UserInfo Convert(RegistrationRequest request)
         {
