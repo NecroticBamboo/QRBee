@@ -50,7 +50,11 @@ namespace QRBee.Api.Services
             var info = Convert(request);
 
             var clientId = await _storage.PutUserInfo(info);
-            var clientCertificate =  _securityService.CreateCertificate(clientId,Encoding.UTF8.GetBytes(request.CertificateRequest.RsaPublicKey.ConvertToJson()));
+
+            using var rsa = LoadRsaPublicKey(request.CertificateRequest.RsaPublicKey);
+            var bytes = rsa.ExportRSAPublicKey();
+
+            var clientCertificate =  _securityService.CreateCertificate(clientId,bytes);
             
             var convertedClientCertificate = Convert(clientCertificate, clientId);
             await _storage.InsertCertificate(convertedClientCertificate);

@@ -10,6 +10,7 @@ namespace QRBee.Api.Services
     /// </summary>
     public class ServerPrivateKeyHandler : IPrivateKeyHandler
     {
+        private readonly ILogger<ServerPrivateKeyHandler> _logger;
         private X509Certificate2? _certificate;
         private readonly object   _syncObject = new object();
 
@@ -21,6 +22,12 @@ namespace QRBee.Api.Services
 
         private string PrivateKeyFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{FileName}";
 
+
+        public ServerPrivateKeyHandler(ILogger<ServerPrivateKeyHandler> logger)
+        {
+            _logger = logger;
+        }
+
         /// <inheritdoc/>
         public bool Exists()
             => File.Exists(PrivateKeyFileName);
@@ -31,12 +38,14 @@ namespace QRBee.Api.Services
             // locking used to make sure that only one thread generating a private key
             lock (_syncObject)
             {
+                _logger.LogDebug("Generating private key");
                 var pk = CreateSelfSignedServerCertificate(subjectName);
                 var pkcs12data = pk.Export(X509ContentType.Pfx, VeryBadNeverUseCertificatePassword);
                 File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
                 _certificate?.Dispose();
                 _certificate = new X509Certificate2(pkcs12data, VeryBadNeverUseCertificatePassword);
+                _logger.LogInformation($"Private key generated: {PrivateKeyFileName}");
             }
 
             return CreateCertificateRequest(subjectName);
@@ -47,7 +56,7 @@ namespace QRBee.Api.Services
         {
             //TODO in fact server should create certificate request in standard format if we ever want to get externally sighed certificate.
             var pk = LoadPrivateKey();
-            var rsa = pk.GetRSAPublicKey();
+            var rsa = pk.GetRSAPrivateKey();
 
             if (rsa == null)
             {
@@ -116,18 +125,19 @@ namespace QRBee.Api.Services
         /// <returns></returns>
         private X509Certificate2 CreateSelfSignedServerCertificate(string subjectName)
         {
+            _logger.LogDebug("Creating self-signed certificate");
             // https://stackoverflow.com/questions/42786986/how-to-create-a-valid-self-signed-x509certificate2-programmatically-not-loadin
 
             var distinguishedName = new X500DistinguishedName($"CN={subjectName}");
 
             using RSA rsa = RSA.Create(RSABits);
-            var request = CreateClientCertificateRequest(distinguishedName, rsa);
+            var request = CreateServerCertificateRequest(distinguishedName, rsa);
 
             var certificate = request.CreateSelfSigned(
                 new DateTimeOffset(DateTime.UtcNow.AddDays(-1)),
                 new DateTimeOffset(DateTime.UtcNow.AddDays(CertificateValidityDays))
             );
-
+            _logger.LogInformation("Self-signed certificate created");
             return certificate;
         }
 
@@ -137,24 +147,29 @@ namespace QRBee.Api.Services
         /// <param name="distinguishedName"></param>
         /// <param name="rsa"></param>
         /// <returns></returns>
-        private static CertificateRequest CreateClientCertificateRequest(X500DistinguishedName distinguishedName, RSA rsa)
+        private static CertificateRequest CreateServerCertificateRequest(X500DistinguishedName distinguishedName, RSA rsa)
         {
             var request = new CertificateRequest(
                 distinguishedName,
                 rsa,
                 HashAlgorithmName.SHA256,
                 RSASignaturePadding.Pkcs1
-                );
+            );
 
             request.CertificateExtensions.Add(
                 new X509KeyUsageExtension(
-                      X509KeyUsageFlags.DataEncipherment
+                    X509KeyUsageFlags.DataEncipherment
                     | X509KeyUsageFlags.KeyEncipherment
-                    | X509KeyUsageFlags.DigitalSignature,
-            false));
+                    | X509KeyUsageFlags.DigitalSignature
+                    | X509KeyUsageFlags.CrlSign
+                    | X509KeyUsageFlags.KeyCertSign,
+                    false));
+
+            request.CertificateExtensions.Add(new X509BasicConstraintsExtension(true,false,0,true));
 
             return request;
         }
+
 
         /// <inheritdoc/>
         public X509Certificate2 LoadPrivateKey()

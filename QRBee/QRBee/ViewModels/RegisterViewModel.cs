@@ -149,7 +149,9 @@ namespace QRBee.ViewModels
 
             try
             {
-                if (!settings.IsRegistered)
+                // FOR TESTING PURPOSES
+                //!settings.IsRegistered
+                if (true)
                 {
                     var response = await service.RegisterAsync(request);
 
@@ -164,12 +166,12 @@ namespace QRBee.ViewModels
                     var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
                     await page.DisplayAlert("Success", "You have been registered successfully", "Ok");
                 }
-                else
-                {
-                    await service.UpdateAsync(settings.ClientId, request);
-                    var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
-                    await page.DisplayAlert("Success", "Your data has been updated successfully", "Ok");
-                }
+                //else
+                //{
+                //    await service.UpdateAsync(settings.ClientId, request);
+                //    var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
+                //    await page.DisplayAlert("Success", "Your data has been updated successfully", "Ok");
+                //}
 
                 await Shell.Current.GoToAsync($"//{nameof(MainPage)}");
             }
