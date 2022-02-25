@@ -12,7 +12,13 @@ namespace QRBee.Core.Data
             set;
         }
 
-        public string Certificate
+        public string ClientCertificate
+        {
+            get;
+            set;
+        }
+
+        public string APIServerCertificate
         {
             get;
             set;

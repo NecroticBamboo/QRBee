@@ -7,7 +7,7 @@ namespace QRBee.Services
 {
     public class Settings
     {
-        //TODO add ClientId
+        
         public string ClientId       { get; set; }
         public string PIN            { get; set; }
         public bool IsRegistered => !string.IsNullOrWhiteSpace(ClientId); 
@@ -20,7 +20,7 @@ namespace QRBee.Services
         public string ExpirationDate { get; set; }
         public string CardHolderName { get; set; }
         public string CVC            { get; set; }
-        public string IssueNo        { get; set; }
+        public int? IssueNo        { get; set; }
         public string Password       { get; set; }
     }
 

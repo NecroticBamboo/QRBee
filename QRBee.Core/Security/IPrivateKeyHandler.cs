@@ -1,4 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 
 namespace QRBee.Core.Security
 {
@@ -38,6 +39,12 @@ namespace QRBee.Core.Security
         /// self-signed until CA issues a proper certificate
         /// </summary>
         /// <returns></returns>
-        X509Certificate2 LoadPrivateKey();
+        RSA LoadPrivateKey();
+
+        /// <summary>
+        /// Get public key certificate
+        /// </summary>
+        /// <returns>Public key certificate</returns>
+        X509Certificate2 GetCertificate();
     }
 }

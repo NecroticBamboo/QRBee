@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.IO;
 using QRBee.Core.Security;
 
 namespace QRBee.Droid.Services
 {
     internal class AndroidSecurityService : SecurityServiceBase
     {
+        private X509Certificate2 _apiServerCertificate;
+        private string ApiServerCertificateFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/ApiServerCertificate.bin";
 
         public AndroidSecurityService(IPrivateKeyHandler privateKeyHandler)
         : base(privateKeyHandler)
@@ -50,6 +53,29 @@ namespace QRBee.Droid.Services
             builder.AppendLine(CertFooter);
 
             return builder.ToString();
+        }
+
+        public override X509Certificate2 APIServerCertificate
+        {
+            get
+            {
+                if (_apiServerCertificate != null)
+                {
+                    return _apiServerCertificate;
+                }
+
+                if (!File.Exists(ApiServerCertificateFileName))
+                    throw new ApplicationException($"File not found: {ApiServerCertificateFileName}");
+                var bytes = File.ReadAllBytes(ApiServerCertificateFileName);
+                _apiServerCertificate = new X509Certificate2(bytes);
+                return _apiServerCertificate;
+            }
+            set
+            {
+                _apiServerCertificate = value;
+                var bytes = _apiServerCertificate.Export(X509ContentType.Cert);
+                File.WriteAllBytes(ApiServerCertificateFileName,bytes);
+            }
         }
     }
 

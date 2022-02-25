@@ -62,7 +62,8 @@ namespace QRBee.Api.Services
             return new RegistrationResponse
             {
                 ClientId = clientId,
-                Certificate = _securityService.Serialize(clientCertificate)
+                ClientCertificate = _securityService.Serialize(clientCertificate),
+                APIServerCertificate = _securityService.Serialize(_securityService.APIServerCertificate)
             };
         }
 

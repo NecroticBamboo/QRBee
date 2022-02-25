@@ -39,11 +39,12 @@ namespace QRBee.Core.Security
         /// <inheritdoc/>
         public byte[] Decrypt(byte[] data)
         {
-            using var myCert = LoadPrivateKey();
-            using var rsa = myCert.GetRSAPrivateKey();
+            using var rsa = LoadPrivateKey();
             var res = rsa?.Decrypt(data, RSAEncryptionPadding.Pkcs1) ?? throw new CryptographicException("No private key found");
             return res;
         }
+
+        public abstract X509Certificate2 APIServerCertificate { get; set; }
 
         /// <inheritdoc/>
         public byte [] Encrypt(byte[] data, X509Certificate2 destCert)
@@ -63,8 +64,7 @@ namespace QRBee.Core.Security
         /// <inheritdoc/>
         public byte[] Sign(byte[] data)
         {
-            using var myCert = LoadPrivateKey();
-            using var rsa = myCert.GetRSAPrivateKey();
+            using var rsa = LoadPrivateKey();
             var res = rsa?.SignData(data, 0, data.Length, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1) ?? throw new CryptographicException("No private key found");
             return res;
         }
@@ -86,16 +86,12 @@ namespace QRBee.Core.Security
             return serNo;
         }
 
-        private X509Certificate2 LoadPrivateKey()
+        private RSA LoadPrivateKey()
         {
             if (!PrivateKeyHandler.Exists())
                 PrivateKeyHandler.GeneratePrivateKey(); //TODO: subject name
 
             var pk = PrivateKeyHandler.LoadPrivateKey();
-            if (!IsValid(pk) )
-            {
-                throw new CryptographicException("CA private key is not valid");
-            }
 
             return pk;
         }

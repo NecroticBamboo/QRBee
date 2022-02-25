@@ -29,7 +29,10 @@ namespace QRBee.Api.Services
             var req = CreateClientCertRequest(distinguishedName, rsa);
 
             var pk = PrivateKeyHandler.LoadPrivateKey();
-            var clientCert = req.Create(pk,
+            var cert = PrivateKeyHandler.GetCertificate();
+            var newCert = cert.CopyWithPrivateKey(pk);
+
+            var clientCert = req.Create(newCert,
                 DateTimeOffset.UtcNow - TimeSpan.FromDays(1),
                 DateTimeOffset.UtcNow + TimeSpan.FromDays(CertificateValidityPeriodDays),
                 Guid.NewGuid()
@@ -91,6 +94,13 @@ namespace QRBee.Api.Services
             builder.AppendLine(CertFooter);
 
             return builder.ToString();
+        }
+
+        /// <inheritdoc/>
+        public override X509Certificate2 APIServerCertificate
+        {
+            get => PrivateKeyHandler.GetCertificate();
+            set => throw new ApplicationException("Do not call this");
         }
     }
 

@@ -81,7 +81,7 @@ namespace QRBee.Droid.Services
         /// <inheritdoc/>
         public ReadableCertificateRequest CreateCertificateRequest(string subjectName)
         {
-            using var rsa = LoadRsaPrivateKey();
+            using var rsa = LoadPrivateKey();
 
             var request = new ReadableCertificateRequest
             {
@@ -96,85 +96,68 @@ namespace QRBee.Droid.Services
             return request;
         }
 
-        /// <summary>
-        /// Generate EXPORTABLE certificate
-        /// </summary>
-        /// <param name="subjectName"></param>
-        /// <returns></returns>
-        private X509Certificate2 CreateSelfSignedClientCertificate(string subjectName)
+        ///// <summary>
+        ///// Generate EXPORTABLE certificate
+        ///// </summary>
+        ///// <param name="subjectName"></param>
+        ///// <returns></returns>
+        //private X509Certificate2 CreateSelfSignedClientCertificate(string subjectName)
+        //{
+        //    // https://stackoverflow.com/questions/42786986/how-to-create-a-valid-self-signed-x509certificate2-programmatically-not-loadin
+
+        //    var distinguishedName = new X500DistinguishedName($"CN={subjectName}");
+
+        //    using var rsa = RSA.Create(RSABits);
+        //    var request = CreateRequest(distinguishedName, rsa);
+
+        //    var certificate = request.CreateSelfSigned(
+        //        new DateTimeOffset(DateTime.UtcNow.AddDays(-1)),
+        //        new DateTimeOffset(DateTime.UtcNow.AddDays(CertificateValidityDays))
+        //        );
+
+        //    return certificate;
+        //}
+
+        ///// <summary>
+        ///// Generate CA certificate request (i.e. with KeyCertSign usage extension)
+        ///// </summary>
+        ///// <param name="distinguishedName"></param>
+        ///// <param name="rsa"></param>
+        ///// <returns></returns>
+        //private static CertificateRequest CreateRequest(X500DistinguishedName distinguishedName, RSA rsa)
+        //{
+        //    //TODO not supported on Android
+        //    var request = new CertificateRequest(
+        //        distinguishedName,
+        //        rsa,
+        //        HashAlgorithmName.SHA256,
+        //        RSASignaturePadding.Pkcs1
+        //        );
+
+        //    request.CertificateExtensions.Add(
+        //        new X509KeyUsageExtension(
+        //              X509KeyUsageFlags.DataEncipherment
+        //            | X509KeyUsageFlags.KeyEncipherment
+        //            | X509KeyUsageFlags.DigitalSignature,
+        //    false));
+
+        //    return request;
+        //}
+
+
+        public X509Certificate2 GetCertificate()
         {
-            // https://stackoverflow.com/questions/42786986/how-to-create-a-valid-self-signed-x509certificate2-programmatically-not-loadin
-
-            var distinguishedName = new X500DistinguishedName($"CN={subjectName}");
-
-            using var rsa = RSA.Create(RSABits);
-            var request = CreateRequest(distinguishedName, rsa);
-
-            var certificate = request.CreateSelfSigned(
-                new DateTimeOffset(DateTime.UtcNow.AddDays(-1)),
-                new DateTimeOffset(DateTime.UtcNow.AddDays(CertificateValidityDays))
-                );
-
-            return certificate;
-        }
-
-        /// <summary>
-        /// Generate CA certificate request (i.e. with KeyCertSign usage extension)
-        /// </summary>
-        /// <param name="distinguishedName"></param>
-        /// <param name="rsa"></param>
-        /// <returns></returns>
-        private static CertificateRequest CreateRequest(X500DistinguishedName distinguishedName, RSA rsa)
-        {
-            //TODO not supported on Android
-            var request = new CertificateRequest(
-                distinguishedName,
-                rsa,
-                HashAlgorithmName.SHA256,
-                RSASignaturePadding.Pkcs1
-                );
-
-            request.CertificateExtensions.Add(
-                new X509KeyUsageExtension(
-                      X509KeyUsageFlags.DataEncipherment
-                    | X509KeyUsageFlags.KeyEncipherment
-                    | X509KeyUsageFlags.DigitalSignature,
-            false));
-
-            return request;
-        }
-
-        /// <inheritdoc/>
-        public X509Certificate2 LoadPrivateKey()
-        {
-            if (_certificate != null)
-                return _certificate;
-
-            // double locking 
-            lock ( _syncObject )
-            {
-                if (_certificate != null)
-                    return _certificate;
-
-                if (!Exists())
-                    throw new CryptographicException("PrivateKey does not exist");
-
-                _certificate = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUsePrivateKeyPassword);
-                return _certificate;
-            }
+            
+            var cert = new X509Certificate2(PrivateKeyFileName);
+            return cert;
         }
 
         /// <inheritdoc/>
         public void AttachCertificate(X509Certificate2 cert)
         {
-            // heavily modified version of:
-            // https://stackoverflow.com/questions/18462064/associate-a-private-key-with-the-x509certificate2-class-in-net
-            using var rsa = LoadRsaPrivateKey();
+            var bytes = cert.Export(X509ContentType.Cert);
 
-            var newPk = cert.CopyWithPrivateKey(rsa);
-
-            var pkcs12data = newPk.Export(X509ContentType.Pfx, VeryBadNeverUsePrivateKeyPassword);
-            File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
+            File.WriteAllBytes(PrivateKeyFileName, bytes);
 
             lock ( _syncObject )
             {
@@ -184,7 +167,7 @@ namespace QRBee.Droid.Services
             }
         }
 
-        private RSA LoadRsaPrivateKey()
+        public RSA LoadPrivateKey()
         {
             var bytes = File.ReadAllBytes(PrivateRsaKeyFileName);
             var s = CryptoHelper.DecryptStringAES(bytes, VeryBadNeverUsePrivateKeyPassword);

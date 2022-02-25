@@ -131,8 +131,7 @@ namespace QRBee.ViewModels
             {
                 var trans = new MerchantToClientRequest
                 {
-                    //TODO get merchant id from database
-                    MerchantId = Guid.NewGuid().ToString("D"),
+                    MerchantId = _settings.LoadSettings().ClientId,
                     MerchantTransactionId = Guid.NewGuid().ToString("D"),
                     Name = Name,
                     Amount = Amount,

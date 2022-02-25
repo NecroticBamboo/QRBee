@@ -55,7 +55,7 @@ namespace QRBee.Api.Services
         public ReadableCertificateRequest CreateCertificateRequest(string subjectName)
         {
             //TODO in fact server should create certificate request in standard format if we ever want to get externally sighed certificate.
-            var pk = LoadPrivateKey();
+            var pk = Load();
             var rsa = pk.GetRSAPrivateKey();
 
             if (rsa == null)
@@ -172,7 +172,7 @@ namespace QRBee.Api.Services
 
 
         /// <inheritdoc/>
-        public X509Certificate2 LoadPrivateKey()
+        private X509Certificate2 Load()
         {
             if (_certificate != null)
                 return _certificate;
@@ -189,6 +189,20 @@ namespace QRBee.Api.Services
                 _certificate = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUseCertificatePassword);
                 return _certificate;
             }
+        }
+
+        public RSA LoadPrivateKey()
+        {
+            var pk = Load();
+            return pk.GetRSAPrivateKey()?? throw new ApplicationException("Private key not found");
+        }
+
+        public X509Certificate2 GetCertificate()
+        {
+            var pk = Load();
+            var bytes = pk.Export(X509ContentType.Cert);
+            var cert = new X509Certificate2(bytes);
+            return cert;
         }
 
         /// <inheritdoc/>

@@ -50,7 +50,7 @@ namespace QRBee.ViewModels
         public string ExpirationDate { get; set; }
         public string CardHolderName { get; set; }
         public string CVC { get; set; }
-        public string IssueNo { get; set; }
+        public int? IssueNo { get; set; }
 
         public Color Password1Color { get; set; }
         public Color Password2Color { get; set;}
@@ -125,7 +125,7 @@ namespace QRBee.ViewModels
 
                 await _settings.SaveSettings(settings);
 
-                if (!_privateKeyHandler.Exists())
+                //if (!_privateKeyHandler.Exists())
                 {
                     _privateKeyHandler.GeneratePrivateKey(settings.Name);
                 }
@@ -149,6 +149,7 @@ namespace QRBee.ViewModels
 
             try
             {
+                //TODO Register if not, otherwise update
                 // FOR TESTING PURPOSES
                 //!settings.IsRegistered
                 if (true)
@@ -158,10 +159,14 @@ namespace QRBee.ViewModels
                     // Save ClientId to LocalSettings
                     settings = _settings.LoadSettings();
                     settings.ClientId = response.ClientId;
+
+                    // Save server public key certificate
+                    _securityService.APIServerCertificate = _securityService.Deserialize(response.APIServerCertificate);
+
                     await _settings.SaveSettings(settings);
 
                     // Attach certificate to privateKey (replace self-sighed with server issued certificate)
-                    _privateKeyHandler.AttachCertificate(_securityService.Deserialize(response.Certificate));
+                    _privateKeyHandler.AttachCertificate(_securityService.Deserialize(response.ClientCertificate));
 
                     var page = Application.Current.MainPage.Navigation.NavigationStack.LastOrDefault();
                     await page.DisplayAlert("Success", "You have been registered successfully", "Ok");

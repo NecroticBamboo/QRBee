@@ -48,6 +48,11 @@ namespace QRBee.Core.Security
         // -------------------------- certificate services --------------------------
 
         /// <summary>
+        /// API Server certificate
+        /// </summary>
+        X509Certificate2 APIServerCertificate { get; set; }
+
+        /// <summary>
         /// Convert binary block to X509Certificate2.
         /// <see cref="X509Certificate2.CreateFromPem"/>
         /// </summary>
