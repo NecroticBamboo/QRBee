@@ -35,11 +35,11 @@ namespace QRBee.Api.Controllers
             return _service.Update(clientId,value);
         }
 
-        [HttpPost("InsertTransaction")]
-        public Task InsertTransaction([FromBody] PaymentRequest value)
+        [HttpPost("Pay")]
+        public Task<PaymentResponse> Pay([FromBody] PaymentRequest value)
         {
             _logger.LogInformation($"Trying to insert new transaction {value.ClientResponse.MerchantRequest.MerchantTransactionId}");
-            return _service.InsertTransaction(value);
+            return _service.Pay(value);
         }
     }
 }

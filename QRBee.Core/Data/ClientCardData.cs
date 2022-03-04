@@ -15,7 +15,36 @@
         /// WARNING: this should always be encrypted and never transmitted in clear text form.
         /// </summary>
         /// <returns>Converted string</returns>
-        public string AsString() => $"{TransactionId}|{CardNumber}|{ExpirationDateMMYY}|{ValidFrom}|{CardHolderName}|{CVC}|{IssueNo}";
+        public string AsString() => $"{TransactionId}|{CardNumber}|{ExpirationDateMMYY}|{ValidFrom}|{CardHolderName}|{CVC}|{IssueNo ?? 0}";
+
+        public static ClientCardData FromString(string input)
+        {
+            var s = input.Split('|');
+            if (s.Length < 7)
+            {
+                throw new ApplicationException("Expected 7 or more elements");
+            }
+
+            var res = new ClientCardData()
+            {
+                TransactionId = s[0],
+                CardNumber = s[1],
+                ExpirationDateMMYY = s[2],
+                ValidFrom = s[3],
+                CardHolderName = s[4],
+                CVC = s[5]
+            };
+
+            if (!string.IsNullOrWhiteSpace(s[6]))
+                res.IssueNo = Convert.ToInt32(s[6]);
+
+            if (res.IssueNo <= 0)
+            {
+                res.IssueNo = null;
+            }
+
+            return res;
+        }
 
     }
 }

@@ -48,8 +48,9 @@ namespace QRBee.ViewModels
                 //QrCode = null;
                 IsVisible = false;
 
-                await service.InsertTransactionAsync(paymentRequest);
+                var response = await service.PayAsync(paymentRequest);
 
+                //TODO handle response
                 await Application.Current.MainPage.DisplayAlert("Success", "The transaction completed successfully ", "Ok");
             }
             catch (Exception e)

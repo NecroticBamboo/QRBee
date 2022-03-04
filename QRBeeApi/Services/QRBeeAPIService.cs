@@ -45,7 +45,7 @@ namespace QRBee.Api.Services
         public async Task<RegistrationResponse> Register(RegistrationRequest request)
         {
 
-            Validate(request);
+            ValidateRegistration(request);
 
             var info = Convert(request);
 
@@ -69,18 +69,11 @@ namespace QRBee.Api.Services
 
         public Task Update(string clientId, RegistrationRequest request)
         {
-            Validate(request);
+            ValidateRegistration(request);
             var info = Convert(request);
             return _storage.UpdateUser(info);
         }
-
-        public Task InsertTransaction(PaymentRequest value)
-        {
-            var info = Convert(value);
-            return _storage.PutTransactionInfo(info);
-        }
-
-        private void Validate(RegistrationRequest request)
+        private void ValidateRegistration(RegistrationRequest request)
         {
             if (request == null)
             {
@@ -92,14 +85,14 @@ namespace QRBee.Api.Services
             var dateOfBirth = request.DateOfBirth;
             var certificateRequest = request.CertificateRequest;
 
-            if (string.IsNullOrEmpty(name) || name.All(char.IsLetter)==false || name.Length>=MaxNameLength)
+            if (string.IsNullOrEmpty(name) || name.All(char.IsLetter) == false || name.Length >= MaxNameLength)
             {
                 throw new ApplicationException($"Name \"{name}\" isn't valid");
             }
 
             var freq = Regex.Matches(email, @"[^@]+@[^@]+").Count;
 
-            if (string.IsNullOrEmpty(email) || email.IndexOf('@')<0 || freq>=2 || email.Length >= MaxEmailLength)
+            if (string.IsNullOrEmpty(email) || email.IndexOf('@') < 0 || freq >= 2 || email.Length >= MaxEmailLength)
             {
                 throw new ApplicationException($"Email \"{email}\" isn't valid");
             }
@@ -120,14 +113,113 @@ namespace QRBee.Api.Services
             var verified = rsa.VerifyData(
                 data,
                 signature,
-                HashAlgorithmName.SHA256, 
+                HashAlgorithmName.SHA256,
                 RSASignaturePadding.Pkcs1
-                );
+            );
 
             if (!verified)
             {
                 throw new ApplicationException($"Digital signature is not valid.");
             }
+        }
+
+        public async Task<PaymentResponse> Pay(PaymentRequest value)
+        {
+            //1. Check payment request parameters for validity
+            ValidateTransaction(value);
+
+            //2. Check client signature
+            var t2 = CheckSignature(
+                value.ClientResponse.AsDataForSignature(),
+                value.ClientResponse.ClientSignature,
+                value.ClientResponse.ClientId);
+
+            //3. Check merchant signature
+            var t3 = CheckSignature(
+                value.ClientResponse.MerchantRequest.AsDataForSignature(),
+                value.ClientResponse.MerchantRequest.MerchantSignature,
+                value.ClientResponse.MerchantRequest.MerchantId);
+
+            //4. Check if transaction was already processed
+            var t4 = CheckTransaction(value.ClientResponse.MerchantRequest.MerchantTransactionId);
+
+            //Parallel task execution
+            await Task.WhenAll(t2, t3, t4);
+
+            //5. Decrypt client card data
+            var clientCardData = DecryptClientData(value.ClientResponse.EncryptedClientCardData);
+
+            //6. Check client card data for validity
+            //7. Register preliminary transaction record with expiry of one minute
+            //8. Send client card data to a payment gateway
+            //9. Record transaction with result
+            //10. Make response for merchant
+            var info = Convert(value);
+            await _storage.PutTransactionInfo(info);
+            return new PaymentResponse();
+        }
+
+        private void ValidateTransaction(PaymentRequest request)
+        {
+            if (request == null)
+            {
+                throw new NullReferenceException();
+            }
+
+            var clientId = request.ClientResponse.ClientId;
+            var merchantId = request.ClientResponse.MerchantRequest.MerchantId;
+            var transactionId = request.ClientResponse.MerchantRequest.MerchantTransactionId;
+            var amount = request.ClientResponse.MerchantRequest.Amount;
+
+            if (clientId == null || merchantId == null || transactionId == null)
+            {
+                throw new ApplicationException("Id isn't valid");
+            }
+
+            if (amount is <= 0 or >= 10000)
+            {
+                throw new ApplicationException($"Amount \"{amount}\" isn't valid");
+            }
+        }
+
+        private async Task CheckSignature(string data,string signature, string id)
+        {
+            var info = await _storage.GetCertificateInfoByUserId(id);
+            var certificate = _securityService.Deserialize(info.Certificate);
+
+            var check = _securityService.Verify(
+                Encoding.UTF8.GetBytes(data),
+                System.Convert.FromBase64String(signature),
+                certificate);
+            
+            if (!check)
+            {
+                throw new ApplicationException($"Signature is incorrect for Id: {id}.");
+            }
+        }
+
+        private async Task CheckTransaction(string transactionId)
+        {
+            var info = await _storage.GetTransactionInfoByTransactionId(transactionId);
+            switch (info.Status)
+            {
+                case TransactionInfo.TransactionStatus.Succeeded:
+                    throw new ApplicationException($"Transaction with Id: {transactionId} was already made.");
+                case TransactionInfo.TransactionStatus.Rejected:
+                    throw new ApplicationException($"Transaction with Id: {transactionId} is not valid.");
+                case TransactionInfo.TransactionStatus.Pending:
+                    throw new ApplicationException($"Transaction with Id: {transactionId} is already in progress.");
+                default:
+                    return;
+            }
+        }
+
+        private ClientCardData DecryptClientData(string encryptedClientCardData)
+        {
+            var info = System.Convert.FromBase64String(encryptedClientCardData);
+            var bytes = _securityService.Decrypt(info);
+            var s = Encoding.UTF8.GetString(bytes);
+            return ClientCardData.FromString(s);
         }
 
         private static RSA LoadRsaPublicKey(StringRSAParameters stringParameters)

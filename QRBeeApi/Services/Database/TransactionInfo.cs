@@ -34,5 +34,12 @@ namespace QRBee.Api.Services.Database
 
         public PaymentRequest Request { get; set; }
 
+        public enum TransactionStatus
+        {
+            Pending = 0,
+            Rejected = 1,
+            Succeeded = 2,
+        }
+        public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
     }
 }

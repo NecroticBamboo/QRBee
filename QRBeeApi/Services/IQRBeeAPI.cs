@@ -28,7 +28,7 @@ namespace QRBee.Api.Services
         /// Handles InsertTransaction request
         /// </summary>
         /// <param name="value">Payment request</param>
-        Task InsertTransaction(PaymentRequest value);
+        Task<PaymentResponse> Pay(PaymentRequest value);
 
     }
 }

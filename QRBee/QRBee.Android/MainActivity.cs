@@ -30,16 +30,10 @@ namespace QRBee.Droid
             LoadApplication(new App(AddServices));
             ZXing.Mobile.MobileBarcodeScanner.Initialize(Application);
 
-            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.Camera) == (int) Permission.Granted)
+            if (ContextCompat.CheckSelfPermission(this, Manifest.Permission.Camera) != (int) Permission.Granted)
             {
-                
+                ActivityCompat.RequestPermissions(this, new String[] {Manifest.Permission.Camera}, 0);
             }
-            else
-            {
-                ActivityCompat.RequestPermissions(this, new String[] { Manifest.Permission.Camera }, 0);
-                // ActivityCompat.RequestPermissions(this, new String[] { Manifest.Permission.UseFingerprint }, 0);
-            }
-
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Android.Content.PM.Permission[] grantResults)

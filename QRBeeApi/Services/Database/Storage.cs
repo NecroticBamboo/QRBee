@@ -102,6 +102,12 @@ namespace QRBee.Api.Services.Database
             return cursor.Current.FirstOrDefault();
         }
 
+        public async Task<TransactionInfo> GetTransactionInfoByTransactionId(string id)
+        {
+            var transaction = await TryGetTransactionInfo(id);
+            return transaction ?? throw new ApplicationException($"Transaction with Id: {id} not found.");
+        }
+
         public async Task InsertCertificate(CertificateInfo info)
         {
             var collection = _database.GetCollection<CertificateInfo>("Certificates");
@@ -131,7 +137,7 @@ namespace QRBee.Api.Services.Database
         /// <returns>null if certificate doesn't exist or CertificateInfo</returns>
         private async Task<CertificateInfo?> TryGetCertificateInfo(string id)
         {
-            var collection = _database.GetCollection<CertificateInfo>("Transactions");
+            var collection = _database.GetCollection<CertificateInfo>("Certificates");
             using var cursor = await collection.FindAsync($"{{ Id: \"{id}\" }}");
             if (!await cursor.MoveNextAsync())
             {
@@ -141,10 +147,23 @@ namespace QRBee.Api.Services.Database
             return cursor.Current.FirstOrDefault();
         }
 
-        public async Task<CertificateInfo> GetCertificateInfo(string id)
+        public async Task<CertificateInfo> GetCertificateInfoByCertificateId(string id)
         {
             var certificate = await TryGetCertificateInfo(id);
             return certificate ?? throw new ApplicationException($"Certificate with Id: {id} not found.");
         }
+
+        public async Task<CertificateInfo> GetCertificateInfoByUserId(string clientId)
+        {
+            var collection = _database.GetCollection<CertificateInfo>("Certificates");
+            using var cursor = await collection.FindAsync($"{{ ClientId: \"{clientId}\" }}");
+            if (!await cursor.MoveNextAsync())
+            {
+                throw new ApplicationException($"Certificate with ClientId: {clientId} not found.");
+            }
+
+            return cursor.Current.FirstOrDefault() ?? throw new ApplicationException($"Certificate with ClientId: {clientId} not found.");
+        }
+
     }
 }

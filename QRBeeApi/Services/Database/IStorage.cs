@@ -32,6 +32,13 @@
         Task PutTransactionInfo(TransactionInfo info);
 
         /// <summary>
+        /// Retrieve transaction information from database
+        /// </summary>
+        /// <param name="id">Identifier by which transaction information will be retrieved</param>
+        /// <returns>Transaction information</returns>
+        Task<TransactionInfo> GetTransactionInfoByTransactionId(string id);
+
+        /// <summary>
         /// Inserts CertificateInfo into database
         /// </summary>
         /// <param name="info">Information to be inserted</param>
@@ -43,6 +50,13 @@
         /// </summary>
         /// <param name="id">Identifier by which certificate information will be retrieved</param>
         /// <returns>Certificate information</returns>
-        Task<CertificateInfo> GetCertificateInfo(string id);
+        Task<CertificateInfo> GetCertificateInfoByCertificateId(string id);
+
+        /// <summary>
+        /// Retrieve certificate information from database
+        /// </summary>
+        /// <param name="clientId">Identifier by which certificate information will be retrieved</param>
+        /// <returns>Certificate information</returns>
+        Task<CertificateInfo> GetCertificateInfoByUserId(string clientId);
     }
 }
