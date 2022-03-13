@@ -31,6 +31,7 @@ builder.Services
     .AddSingleton<IMongoClient>( cfg => new MongoClient(cfg.GetRequiredService<IOptions<DatabaseSettings>>().Value.ToMongoDbSettings()))
     .AddSingleton<IPrivateKeyHandler, ServerPrivateKeyHandler>()
     .AddSingleton<ISecurityService, SecurityService>()
+    .AddSingleton<IPaymentGateway, PaymentGateway>()
     ;
 
 var app = builder.Build();

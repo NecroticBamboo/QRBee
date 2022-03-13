@@ -41,5 +41,7 @@ namespace QRBee.Api.Services.Database
             Succeeded = 2,
         }
         public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
+
+        public string? RejectReason { get; set; }
     }
 }

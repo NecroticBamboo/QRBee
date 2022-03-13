@@ -2,35 +2,15 @@
 {
     public record ClientToMerchantResponse
     {
-        public MerchantToClientRequest MerchantRequest
-        {
-            get;
-            set;
-        }
+        public MerchantToClientRequest MerchantRequest { get; set; }
 
-        public string ClientId
-        {
-            get;
-            set;
-        }
+        public string ClientId { get; set; }
 
-        public DateTime TimeStampUTC
-        {
-            get;
-            set;
-        }
+        public DateTime TimeStampUTC { get; set; }
 
-        public string ClientSignature
-        {
-            get;
-            set;
-        }
+        public string ClientSignature { get; set; }
 
-        public string EncryptedClientCardData
-        {
-            get;
-            set;
-        }
+        public string EncryptedClientCardData { get; set; }
 
         /// <summary>
         /// Convert ClientToMerchantResponse to string to be used as QR Code source (along with client signature)

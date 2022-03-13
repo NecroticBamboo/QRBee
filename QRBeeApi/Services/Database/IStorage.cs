@@ -39,6 +39,12 @@
         Task<TransactionInfo> GetTransactionInfoByTransactionId(string id);
 
         /// <summary>
+        /// Update transaction after execution
+        /// </summary>
+        /// <param name="info">Transaction to be updated</param>
+        Task UpdateTransaction(TransactionInfo info);
+
+        /// <summary>
         /// Inserts CertificateInfo into database
         /// </summary>
         /// <param name="info">Information to be inserted</param>

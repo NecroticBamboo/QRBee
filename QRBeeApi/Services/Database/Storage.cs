@@ -93,7 +93,7 @@ namespace QRBee.Api.Services.Database
         private async Task<TransactionInfo?> TryGetTransactionInfo(string id)
         {
             var collection = _database.GetCollection<TransactionInfo>("Transactions");
-            using var cursor = await collection.FindAsync($"{{ Id: \"{id}\" }}");
+            using var cursor = await collection.FindAsync($"{{ _id: \"{id}\" }}");
             if (!await cursor.MoveNextAsync())
             {
                 return null;
@@ -106,6 +106,12 @@ namespace QRBee.Api.Services.Database
         {
             var transaction = await TryGetTransactionInfo(id);
             return transaction ?? throw new ApplicationException($"Transaction with Id: {id} not found.");
+        }
+
+        public async Task UpdateTransaction(TransactionInfo info)
+        {
+            var collection = _database.GetCollection<TransactionInfo>("Transactions");
+            await collection.ReplaceOneAsync($"{{ _id: \"{info.Id}\" }}", info, new ReplaceOptions() { IsUpsert = false });
         }
 
         public async Task InsertCertificate(CertificateInfo info)

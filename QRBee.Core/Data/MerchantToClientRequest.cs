@@ -4,41 +4,17 @@ namespace QRBee.Core.Data
 {
     public record MerchantToClientRequest
     {
-        public string MerchantId
-        {
-            get;
-            set;
-        }
+        public string MerchantId { get; set; }
 
-        public string MerchantTransactionId
-        {
-            get;
-            set;
-        }
+        public string MerchantTransactionId { get; set; }
 
-        public string Name
-        {
-            get;
-            set;
-        }
+        public string Name { get; set; }
 
-        public decimal Amount
-        {
-            get;
-            set;
-        }
+        public decimal Amount { get; set; }
 
-        public DateTime TimeStampUTC
-        {
-            get;
-            set;
-        }
+        public DateTime TimeStampUTC { get; set; }
 
-        public string MerchantSignature
-        {
-            get;
-            set;
-        }
+        public string MerchantSignature { get; set; }
 
         /// <summary>
         /// Convert MerchantToClientRequest to string to be used as QR Code source (along with merchant signature)

@@ -50,8 +50,29 @@ namespace QRBee.ViewModels
 
                 var response = await service.PayAsync(paymentRequest);
 
-                //TODO handle response
-                await Application.Current.MainPage.DisplayAlert("Success", "The transaction completed successfully ", "Ok");
+                if (response.Success)
+                {
+                    var check = _securityService.Verify(
+                        Encoding.UTF8.GetBytes(response.AsDataForSignature()),
+                        Convert.FromBase64String(response.ServerSignature),
+                        _securityService.APIServerCertificate
+                        );
+
+                    if (check)
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Success", "The transaction completed successfully ", "Ok");
+                    }
+                    else
+                    {
+                        await Application.Current.MainPage.DisplayAlert("Failure", "Invalid server signature", "Ok");
+                    }
+                    
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Failure", $"The transaction failed: {response.RejectReason}", "Ok");
+                }
+                
             }
             catch (Exception e)
             {

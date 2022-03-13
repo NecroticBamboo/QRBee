@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -18,16 +19,18 @@ namespace QRBee.Api.Services
         private readonly IStorage _storage;
         private readonly ISecurityService _securityService;
         private readonly IPrivateKeyHandler _privateKeyHandler;
+        private readonly IPaymentGateway _paymentGateway;
         private static readonly object _lock = new ();
 
         private const int MaxNameLength = 512;
         private const int MaxEmailLength = 512;
 
-        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler)
+        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway)
         {
             _storage = storage;
             _securityService = securityService;
             _privateKeyHandler = privateKeyHandler;
+            _paymentGateway = paymentGateway;
             Init(_privateKeyHandler);
         }
 
@@ -150,13 +153,42 @@ namespace QRBee.Api.Services
             var clientCardData = DecryptClientData(value.ClientResponse.EncryptedClientCardData);
 
             //6. Check client card data for validity
+            await CheckClientCardData(clientCardData);
+
             //7. Register preliminary transaction record with expiry of one minute
-            //8. Send client card data to a payment gateway
-            //9. Record transaction with result
-            //10. Make response for merchant
             var info = Convert(value);
+            info.Status = TransactionInfo.TransactionStatus.Pending;
+
             await _storage.PutTransactionInfo(info);
-            return new PaymentResponse();
+
+            //8. Send client card data to a payment gateway
+            var res = await _paymentGateway.Payment(info, clientCardData);
+
+            //9. Record transaction with result
+            if (res.Success)
+            {
+                info.Status=TransactionInfo.TransactionStatus.Succeeded;
+            }
+            else
+            {
+                info.Status = TransactionInfo.TransactionStatus.Rejected;
+                info.RejectReason = res.ErrorMessage;
+            }
+            await _storage.UpdateTransaction(info);
+
+            //10. Make response for merchant
+            var response = new PaymentResponse
+            {
+                ServerTransactionId = info.TransactionId,
+                PaymentRequest = value,
+                ServerTimeStampUTC = DateTime.UtcNow,
+                Success = res.Success,
+                RejectReason = res.ErrorMessage,
+            };
+
+            var signature = _securityService.Sign(Encoding.UTF8.GetBytes(response.AsDataForSignature()));
+            response.ServerSignature = System.Convert.ToBase64String(signature);
+            return response;
         }
 
         private void ValidateTransaction(PaymentRequest request)
@@ -220,6 +252,31 @@ namespace QRBee.Api.Services
             var bytes = _securityService.Decrypt(info);
             var s = Encoding.UTF8.GetString(bytes);
             return ClientCardData.FromString(s);
+        }
+
+        private async Task CheckClientCardData(ClientCardData data)
+        {
+            var transactionId = data.TransactionId;
+            var expirationDate = DateTime.Parse(data.ExpirationDateMMYY);
+            var validFrom = DateTime.Parse(data.ValidFrom);
+            var holderName = data.CardHolderName;
+
+            await CheckTransaction(transactionId);
+
+            if (expirationDate <= DateTime.UtcNow)
+            {
+                throw new ApplicationException($"The expiration date: {expirationDate} is wrong");
+            }
+
+            if (validFrom > DateTime.UtcNow)
+            {
+                throw new ApplicationException($"The valid from date: {validFrom} is wrong");
+            }
+
+            if (holderName.Any(char.IsDigit))
+            {
+                throw new ApplicationException($"The card holder name: {holderName} is wrong");
+            }
         }
 
         private static RSA LoadRsaPublicKey(StringRSAParameters stringParameters)
