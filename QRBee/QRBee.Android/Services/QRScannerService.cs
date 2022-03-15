@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using QRBee.Services;
+﻿using QRBee.Services;
+using System.Threading.Tasks;
 using Xamarin.Forms;
 using ZXing.Mobile;
 

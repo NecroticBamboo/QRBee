@@ -1,7 +1,4 @@
-﻿using QRBee.ViewModels;
-using QRBee.Views;
-using System;
-using System.Collections.Generic;
+﻿using QRBee.Views;
 using Xamarin.Forms;
 
 namespace QRBee

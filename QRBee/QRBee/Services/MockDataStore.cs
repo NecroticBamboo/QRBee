@@ -8,7 +8,7 @@ namespace QRBee.Services
 {
     public class MockDataStore : IDataStore<Item>
     {
-        readonly List<Item> items;
+        private readonly List<Item> items;
 
         public MockDataStore()
         {

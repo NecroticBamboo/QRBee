@@ -1,9 +1,8 @@
-﻿using System;
-using Android;
+﻿using Android;
 using Android.App;
 using Android.Content.PM;
-using Android.Runtime;
 using Android.OS;
+using Android.Runtime;
 using Android.Support.V4.Content;
 using AndroidX.Core.App;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +10,7 @@ using Plugin.Fingerprint;
 using QRBee.Core.Security;
 using QRBee.Droid.Services;
 using QRBee.Services;
+using System;
 
 namespace QRBee.Droid
 {

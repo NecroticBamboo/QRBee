@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace QRBee.Core.Data
+﻿namespace QRBee.Core.Data
 {
     public record RegistrationResponse
     {

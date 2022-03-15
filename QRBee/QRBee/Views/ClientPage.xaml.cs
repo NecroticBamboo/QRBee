@@ -1,6 +1,4 @@
-﻿using System;
-using QRBee.Services;
-using QRBee.ViewModels;
+﻿using QRBee.ViewModels;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 

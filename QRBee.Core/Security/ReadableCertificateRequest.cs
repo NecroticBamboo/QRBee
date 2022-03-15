@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace QRBee.Core.Security
+﻿namespace QRBee.Core.Security
 {
     public class ReadableCertificateRequest
     {

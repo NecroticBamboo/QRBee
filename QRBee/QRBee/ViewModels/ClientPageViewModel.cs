@@ -1,9 +1,8 @@
-﻿using System;
-using System.Text;
-using QRBee.Core.Data;
+﻿using QRBee.Core.Data;
 using QRBee.Core.Security;
 using QRBee.Services;
-using QRBee.Views;
+using System;
+using System.Text;
 using Xamarin.Forms;
 
 namespace QRBee.ViewModels

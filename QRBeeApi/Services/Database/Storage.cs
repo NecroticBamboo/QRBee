@@ -1,7 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using QRBee.Api.Controllers;
 
 namespace QRBee.Api.Services.Database
 {

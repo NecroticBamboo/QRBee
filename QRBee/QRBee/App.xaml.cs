@@ -1,9 +1,7 @@
-﻿using QRBee.Services;
-using QRBee.Views;
-using System;
-using Microsoft.Extensions.DependencyInjection;
-using QRBee.Core.Security;
+﻿using Microsoft.Extensions.DependencyInjection;
+using QRBee.Services;
 using QRBee.ViewModels;
+using System;
 using Xamarin.Forms;
 
 namespace QRBee
@@ -22,7 +20,7 @@ namespace QRBee
         }
         protected static IServiceProvider ServiceProvider { get; set; }
 
-        void SetupServices(Action<IServiceCollection> addPlatformServices = null)
+        private void SetupServices(Action<IServiceCollection> addPlatformServices = null)
         {
             var services = new ServiceCollection();
 

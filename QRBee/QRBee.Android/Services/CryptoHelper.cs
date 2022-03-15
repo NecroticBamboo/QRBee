@@ -13,7 +13,7 @@ namespace QRBee.Droid.Services
         //password based encryption, it's probably safe enough as long as
         //it is truly uncommon. Also too much work to alter this answer otherwise.
         // Never use salt like this
-        private static byte[] _salt = System.Text.Encoding.UTF8.GetBytes("‘wÑÏU4)MÓvcvsª");
+        private static readonly byte[] _salt = System.Text.Encoding.UTF8.GetBytes("‘wÑÏU4)MÓvcvsª");
 
         /// <summary>
         /// Encrypt the given string using AES.  The string can be decrypted using 

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace QRBee.Models
+﻿namespace QRBee.Models
 {
     public class Item
     {

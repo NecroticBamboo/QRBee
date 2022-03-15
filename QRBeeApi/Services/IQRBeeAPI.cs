@@ -1,7 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using Microsoft.AspNetCore.Mvc;
-using QRBee.Core;
-using QRBee.Core.Data;
+﻿using QRBee.Core.Data;
 
 namespace QRBee.Api.Services
 {

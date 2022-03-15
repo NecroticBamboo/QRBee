@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.X509Certificates;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
 
 namespace QRBee.Api.Services.Database
 {

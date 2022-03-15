@@ -1,5 +1,5 @@
-﻿using Xamarin.Forms.Xaml;
-using QRBee.ViewModels;
+﻿using QRBee.ViewModels;
+using Xamarin.Forms.Xaml;
 
 namespace QRBee.Views
 {

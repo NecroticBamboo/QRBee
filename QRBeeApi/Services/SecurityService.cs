@@ -1,9 +1,7 @@
-﻿using System;
+﻿using QRBee.Core.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
-using QRBee.Core.Security;
 
 namespace QRBee.Api.Services
 {

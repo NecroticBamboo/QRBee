@@ -1,13 +1,11 @@
-﻿using System.Globalization;
-using System.Runtime.CompilerServices;
+﻿using QRBee.Api.Services.Database;
+using QRBee.Core.Data;
+using QRBee.Core.Security;
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
-using QRBee.Api.Services.Database;
-using QRBee.Core;
-using QRBee.Core.Data;
-using QRBee.Core.Security;
 
 namespace QRBee.Api.Services
 {

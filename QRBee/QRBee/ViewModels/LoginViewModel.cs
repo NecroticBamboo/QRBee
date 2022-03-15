@@ -1,8 +1,7 @@
-﻿using System.Linq;
-using QRBee.Views;
-using Plugin.Fingerprint;
+﻿using Plugin.Fingerprint;
 using Plugin.Fingerprint.Abstractions;
 using QRBee.Services;
+using QRBee.Views;
 using Xamarin.Forms;
 
 namespace QRBee.ViewModels
