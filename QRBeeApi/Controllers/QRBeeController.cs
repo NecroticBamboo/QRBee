@@ -19,6 +19,13 @@ namespace QRBee.Api.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
+        public Task<RedirectResult> Get()
+        {
+            _logger.LogInformation($"Redirecting to Swagger...");
+            return Task.FromResult(RedirectPermanent("/swagger"));
+        }
+
         [HttpPost("Register")]
         public Task<RegistrationResponse>  Register([FromBody] RegistrationRequest value)
         {
