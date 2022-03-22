@@ -20,11 +20,22 @@ namespace QRBee.Api.Services
 
         private const string VeryBadNeverUseCertificatePassword = "+ñèbòFëc×ŽßRúß¿ãçPN";
 
-        private string PrivateKeyFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{FileName}";
+        private string PrivateKeyFileName { get; set; } = $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{FileName}";
+        private string PrivateKeyCertificatePassword { get; set; } = VeryBadNeverUseCertificatePassword;
 
-
-        public ServerPrivateKeyHandler(ILogger<ServerPrivateKeyHandler> logger)
+        public ServerPrivateKeyHandler(ILogger<ServerPrivateKeyHandler> logger, IConfiguration config)
         {
+            // in production environment private key must be generated in advance and properly protected with the 
+            // strong password.
+            // NEVER use debugging password in production environment.
+
+            var pkFileName = config["PrivateKey:FileName"];
+            if ( !string.IsNullOrWhiteSpace(pkFileName) && File.Exists(pkFileName) )
+                PrivateKeyFileName = Path.GetFullPath(pkFileName);
+            var pw = config["PrivateKey:Password"];
+            if (!string.IsNullOrWhiteSpace(pw))
+                PrivateKeyCertificatePassword = pw;
+
             _logger = logger;
         }
 
@@ -40,11 +51,11 @@ namespace QRBee.Api.Services
             {
                 _logger.LogDebug("Generating private key");
                 var pk = CreateSelfSignedServerCertificate(subjectName);
-                var pkcs12data = pk.Export(X509ContentType.Pfx, VeryBadNeverUseCertificatePassword);
+                var pkcs12data = pk.Export(X509ContentType.Pfx, PrivateKeyCertificatePassword);
                 File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
                 _certificate?.Dispose();
-                _certificate = new X509Certificate2(pkcs12data, VeryBadNeverUseCertificatePassword);
+                _certificate = new X509Certificate2(pkcs12data, PrivateKeyCertificatePassword);
                 _logger.LogInformation($"Private key generated: {PrivateKeyFileName}");
             }
 
@@ -186,7 +197,7 @@ namespace QRBee.Api.Services
                 if (!Exists())
                     GeneratePrivateKey("QRBeeCA");
 
-                _certificate = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUseCertificatePassword);
+                _certificate = new X509Certificate2(PrivateKeyFileName, PrivateKeyCertificatePassword);
                 return _certificate;
             }
         }
@@ -212,14 +223,14 @@ namespace QRBee.Api.Services
             // https://stackoverflow.com/questions/18462064/associate-a-private-key-with-the-x509certificate2-class-in-net
 
             // we can't use LoadPrivateKey here as it creating non-exportable key
-            var pk = new X509Certificate2(PrivateKeyFileName, VeryBadNeverUseCertificatePassword, X509KeyStorageFlags.Exportable);
+            var pk = new X509Certificate2(PrivateKeyFileName, PrivateKeyCertificatePassword, X509KeyStorageFlags.Exportable);
             using var rsa = pk.GetRSAPrivateKey();
             if (rsa == null)
                 throw new CryptographicException("Can't get PrivateKey");
 
             var newPk = cert.CopyWithPrivateKey(rsa);
 
-            var pkcs12data = newPk.Export(X509ContentType.Pfx, VeryBadNeverUseCertificatePassword);
+            var pkcs12data = newPk.Export(X509ContentType.Pfx, PrivateKeyCertificatePassword);
             File.WriteAllBytes(PrivateKeyFileName, pkcs12data);
 
             lock ( _syncObject )
