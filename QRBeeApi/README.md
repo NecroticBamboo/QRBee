@@ -9,3 +9,7 @@
 
 4. Save text file as StartMongo.bat file
 5. Run StartMongo.bat
+
+Initialize the database using Databasae/MOngoDB-init.js using Robo3T or Mongo CLI tools.
+This step can be avoided and collections will be created automatically, but you still have to
+cerate the database named "QRBee" and later the indexes required.
