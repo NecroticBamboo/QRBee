@@ -33,9 +33,9 @@ namespace QRBee.Core.Data
         public static MerchantToClientRequest FromString(string input)
         {
             var s = input.Split('|');
-            if (s.Length != 6)
+            if (s.Length < 6)
             {
-                throw new ApplicationException("Expected 6 elements");
+                throw new ApplicationException($"Expected 6 elements but got {s.Length}");
             }
 
             var res = new MerchantToClientRequest

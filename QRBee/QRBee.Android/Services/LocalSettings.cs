@@ -9,7 +9,13 @@ namespace QRBee.Droid.Services
 {
     internal class LocalSettings : ILocalSettings
     {
+        // Use https://10.0.2.2:7000 if you are running in emulator and API server on localhost
+#if false
         public string QRBeeApiUrl => "https://10.0.2.2:7000";
+#else
+        public string QRBeeApiUrl => "https://qrbee-api.azurewebsites.net/";
+#endif
+
 
         public async Task SaveSettings(Settings settings)
         {

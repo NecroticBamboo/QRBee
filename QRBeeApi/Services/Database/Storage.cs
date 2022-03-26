@@ -121,7 +121,7 @@ namespace QRBee.Api.Services.Database
                 throw new ApplicationException("Info Id is null.");
             }
 
-            var certificate = await TryGetCertificateInfo(info.Id);
+            var certificate = await TryGetCertificateInfoByEmail(info.Email ?? throw new ApplicationException("Email is not set"));
 
             if (certificate == null)
             {
@@ -130,7 +130,10 @@ namespace QRBee.Api.Services.Database
                 return;
             }
 
-            _logger.LogInformation($"Found certificate with ID: {info.Id}");
+            await collection.DeleteOneAsync($"{{ _id: \"{certificate.Id}\" }}");
+            await collection.ReplaceOneAsync($"{{ _id: \"{info.Id}\" }}", info, new ReplaceOptions() { IsUpsert = true });
+
+            _logger.LogInformation($"Found certificate with old ID: {certificate.Id} and replaced with new ID: {info.Id}");
 
         }
 
@@ -143,6 +146,23 @@ namespace QRBee.Api.Services.Database
         {
             var collection = _database.GetCollection<CertificateInfo>("Certificates");
             using var cursor = await collection.FindAsync($"{{ Id: \"{id}\" }}");
+            if (!await cursor.MoveNextAsync())
+            {
+                return null;
+            }
+
+            return cursor.Current.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Try to find if the Certificate already exists in the database
+        /// </summary>
+        /// <param name="email">parameter by which to find CertificateInfo</param>
+        /// <returns>null if certificate doesn't exist or CertificateInfo</returns>
+        private async Task<CertificateInfo?> TryGetCertificateInfoByEmail(string email)
+        {
+            var collection = _database.GetCollection<CertificateInfo>("Certificates");
+            using var cursor = await collection.FindAsync($"{{ Email: \"{email}\" }}");
             if (!await cursor.MoveNextAsync())
             {
                 return null;

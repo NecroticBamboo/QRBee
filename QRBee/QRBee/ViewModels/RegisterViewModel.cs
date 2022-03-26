@@ -124,7 +124,7 @@ namespace QRBee.ViewModels
 
                 await _settings.SaveSettings(settings);
 
-                //if (!_privateKeyHandler.Exists())
+                if (!_privateKeyHandler.Exists())
                 {
                     _privateKeyHandler.GeneratePrivateKey(settings.Name);
                 }

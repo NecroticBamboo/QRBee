@@ -16,7 +16,7 @@
         /// Convert ClientToMerchantResponse to string to be used as QR Code source (along with client signature)
         /// </summary>
         /// <returns> Converted string</returns>
-        public string AsQRCodeString() => $"{AsDataForSignature()}|{ClientSignature}";
+        public string AsQRCodeString() => $"{ClientId}|{TimeStampUTC:O}|{ClientSignature}";
 
         public string AsDataForSignature() => $"{ClientId}|{TimeStampUTC:O}|{MerchantRequest.AsQRCodeString()}";
 
@@ -31,15 +31,14 @@
             var s = input.Split('|');
             if (s.Length < 3)
             {
-                throw new ApplicationException("Expected 3 or more elements");
+                throw new ApplicationException($"Expected 3 or more elements but got {s.Length}");
             }
 
             var res = new ClientToMerchantResponse()
             {
-                MerchantRequest = MerchantToClientRequest.FromString(string.Join("|", s.Skip(2))),
-                ClientId = s[0],
-                TimeStampUTC = DateTime.ParseExact(s[1], "O", null),
-                ClientSignature = s[3]
+                ClientId        = s[0],
+                TimeStampUTC    = DateTime.ParseExact(s[1], "O", null),
+                ClientSignature = s[2]
             };
 
             return res;

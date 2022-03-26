@@ -17,6 +17,8 @@ namespace QRBee.ViewModels
         private decimal _amount;
         private string _qrCode;
 
+        private MerchantToClientRequest _lastRequest;
+
         public Command GenerateQrCommand { get; }
         public Command ScanCommand{ get; }
 
@@ -42,7 +44,13 @@ namespace QRBee.ViewModels
                 var client = new HttpClient(GetInsecureHandler());
 
                 var service = new Core.Client.Client(_settings.QRBeeApiUrl, client);
-                var paymentRequest = PaymentRequest.FromString(result);
+                var clientResponse = ClientToMerchantResponse.FromString(result);
+
+                clientResponse.MerchantRequest = _lastRequest;
+                var paymentRequest = new PaymentRequest
+                {
+                    ClientResponse = clientResponse
+                };
 
                 //QrCode = null;
                 IsVisible = false;
@@ -152,19 +160,21 @@ namespace QRBee.ViewModels
             }
             else
             {
-                var trans = new MerchantToClientRequest
+                var request = new MerchantToClientRequest
                 {
-                    MerchantId = _settings.LoadSettings().ClientId,
+                    MerchantId            = _settings.LoadSettings().ClientId,
                     MerchantTransactionId = Guid.NewGuid().ToString("D"),
-                    Name = Name,
-                    Amount = Amount,
-                    TimeStampUTC = DateTime.UtcNow
+                    Name                  = Name,
+                    Amount                = Amount,
+                    TimeStampUTC          = DateTime.UtcNow
                 };
 
-                var merchantSignature = _securityService.Sign(Encoding.UTF8.GetBytes(trans.AsDataForSignature()));
-                trans.MerchantSignature = Convert.ToBase64String(merchantSignature);
+                var merchantSignature = _securityService.Sign(Encoding.UTF8.GetBytes(request.AsDataForSignature()));
+                request.MerchantSignature = Convert.ToBase64String(merchantSignature);
 
-                QrCode = trans.AsQRCodeString();
+                _lastRequest = request;
+
+                QrCode = request.AsQRCodeString();
                 IsVisible = true;
             }
 

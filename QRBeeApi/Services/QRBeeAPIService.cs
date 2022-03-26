@@ -57,7 +57,7 @@ namespace QRBee.Api.Services
 
             var clientCertificate =  _securityService.CreateCertificate(clientId,bytes);
             
-            var convertedClientCertificate = Convert(clientCertificate, clientId);
+            var convertedClientCertificate = Convert(clientCertificate, clientId,request.Email);
             await _storage.InsertCertificate(convertedClientCertificate);
 
             return new RegistrationResponse
@@ -126,62 +126,78 @@ namespace QRBee.Api.Services
 
         public async Task<PaymentResponse> Pay(PaymentRequest value)
         {
-            //1. Check payment request parameters for validity
-            ValidateTransaction(value);
-
-            //2. Check client signature
-            var t2 = CheckSignature(
-                value.ClientResponse.AsDataForSignature(),
-                value.ClientResponse.ClientSignature,
-                value.ClientResponse.ClientId);
-
-            //3. Check merchant signature
-            var t3 = CheckSignature(
-                value.ClientResponse.MerchantRequest.AsDataForSignature(),
-                value.ClientResponse.MerchantRequest.MerchantSignature,
-                value.ClientResponse.MerchantRequest.MerchantId);
-
-            //4. Check if transaction was already processed
-            var t4 = CheckTransaction(value.ClientResponse.MerchantRequest.MerchantTransactionId);
-
-            //Parallel task execution
-            await Task.WhenAll(t2, t3, t4);
-
-            //5. Decrypt client card data
-            var clientCardData = DecryptClientData(value.ClientResponse.EncryptedClientCardData);
-
-            //6. Check client card data for validity
-            await CheckClientCardData(clientCardData);
-
-            //7. Register preliminary transaction record with expiry of one minute
-            var info = Convert(value);
-            info.Status = TransactionInfo.TransactionStatus.Pending;
-
-            await _storage.PutTransactionInfo(info);
-
-            //8. Send client card data to a payment gateway
-            var res = await _paymentGateway.Payment(info, clientCardData);
-
-            //9. Record transaction with result
-            if (res.Success)
+            try
             {
-                info.Status=TransactionInfo.TransactionStatus.Succeeded;
-            }
-            else
-            {
-                info.Status = TransactionInfo.TransactionStatus.Rejected;
-                info.RejectReason = res.ErrorMessage;
-            }
-            await _storage.UpdateTransaction(info);
+                //1. Check payment request parameters for validity
+                ValidateTransaction(value);
 
-            //10. Make response for merchant
+                //2. Check client signature
+                var t2 = CheckSignature(
+                    value.ClientResponse.AsDataForSignature(),
+                    value.ClientResponse.ClientSignature,
+                    value.ClientResponse.ClientId);
+
+                //3. Check merchant signature
+                var t3 = CheckSignature(
+                    value.ClientResponse.MerchantRequest.AsDataForSignature(),
+                    value.ClientResponse.MerchantRequest.MerchantSignature,
+                    value.ClientResponse.MerchantRequest.MerchantId);
+
+                //4. Check if transaction was already processed
+                var t4 = CheckTransaction(value.ClientResponse.MerchantRequest.MerchantTransactionId);
+
+                //Parallel task execution
+                await Task.WhenAll(t2, t3, t4);
+
+                //5. Decrypt client card data
+                var clientCardData = DecryptClientData(value.ClientResponse.EncryptedClientCardData);
+
+                //6. Check client card data for validity
+                await CheckClientCardData(clientCardData);
+
+                //7. Register preliminary transaction record with expiry of one minute
+                var info = Convert(value);
+                info.Status = TransactionInfo.TransactionStatus.Pending;
+
+                await _storage.PutTransactionInfo(info);
+
+                //8. Send client card data to a payment gateway
+                var res = await _paymentGateway.Payment(info, clientCardData);
+
+                //9. Record transaction with result
+                if (res.Success)
+                {
+                    info.Status=TransactionInfo.TransactionStatus.Succeeded;
+                }
+                else
+                {
+                    info.Status = TransactionInfo.TransactionStatus.Rejected;
+                    info.RejectReason = res.ErrorMessage;
+                }
+                await _storage.UpdateTransaction(info);
+
+                //10. Make response for merchant
+                var response = MakePaymentResponse(value, info.TransactionId ?? "", info.Status==TransactionInfo.TransactionStatus.Succeeded, info.RejectReason);
+                return response;
+            }
+            catch (Exception e)
+            {
+                var response = MakePaymentResponse(value, "", false, e.Message);
+                return response;
+            }
+            
+        }
+
+        private PaymentResponse MakePaymentResponse(PaymentRequest value, string transactionId, bool result = true, string? errorMessage = null)
+        {
+            
             var response = new PaymentResponse
             {
-                ServerTransactionId = info.TransactionId,
+                ServerTransactionId = transactionId,
                 PaymentRequest = value,
                 ServerTimeStampUTC = DateTime.UtcNow,
-                Success = res.Success,
-                RejectReason = res.ErrorMessage,
+                Success = result,
+                RejectReason = errorMessage,
             };
 
             var signature = _securityService.Sign(Encoding.UTF8.GetBytes(response.AsDataForSignature()));
@@ -224,7 +240,7 @@ namespace QRBee.Api.Services
             
             if (!check)
             {
-                throw new ApplicationException($"Signature is incorrect for Id: {id}.");
+                throw new ApplicationException($"Signature is incorrect for Id: {id}. Data: {data}");
             }
         }
 
@@ -309,13 +325,14 @@ namespace QRBee.Api.Services
             return new TransactionInfo(request, DateTime.UtcNow);
         }
 
-        private CertificateInfo Convert(X509Certificate2 certificate, string clientId)
+        private CertificateInfo Convert(X509Certificate2 certificate, string clientId, string email)
         {
             var convertedCertificate = _securityService.Serialize(certificate);
             return new CertificateInfo
             {
                 Id              = certificate.SerialNumber, 
-                ClientId        = clientId, 
+                ClientId        = clientId,
+                Email           = email,
                 Certificate     = convertedCertificate, 
                 ServerTimeStamp = DateTime.UtcNow
             };
