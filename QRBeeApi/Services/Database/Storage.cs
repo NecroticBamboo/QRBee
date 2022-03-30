@@ -71,7 +71,7 @@ namespace QRBee.Api.Services.Database
         {
             var collection = _database.GetCollection<TransactionInfo>("Transactions");
 
-            var transaction = await TryGetTransactionInfo(info.Id);
+            var transaction = await TryGetTransactionInfoByTransactionId(info.Id);
 
             if (transaction == null)
             {
@@ -83,12 +83,7 @@ namespace QRBee.Api.Services.Database
             _logger.LogInformation($"Found transaction with ClientId: {info.Id}");
         }
 
-        /// <summary>
-        /// Try to find if the Transaction already exists in the database
-        /// </summary>
-        /// <param name="id">parameter by which to find TransactionInfo</param>
-        /// <returns>null if transaction doesn't exist or TransactionInfo</returns>
-        private async Task<TransactionInfo?> TryGetTransactionInfo(string id)
+        public async Task<TransactionInfo?> TryGetTransactionInfoByTransactionId(string id)
         {
             var collection = _database.GetCollection<TransactionInfo>("Transactions");
             using var cursor = await collection.FindAsync($"{{ _id: \"{id}\" }}");
@@ -102,7 +97,7 @@ namespace QRBee.Api.Services.Database
 
         public async Task<TransactionInfo> GetTransactionInfoByTransactionId(string id)
         {
-            var transaction = await TryGetTransactionInfo(id);
+            var transaction = await TryGetTransactionInfoByTransactionId(id);
             return transaction ?? throw new ApplicationException($"Transaction with Id: {id} not found.");
         }
 

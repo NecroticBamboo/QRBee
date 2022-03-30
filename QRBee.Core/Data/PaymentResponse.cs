@@ -18,6 +18,6 @@
         /// Convert PaymentResponse to string to be encrypted and transmitted back to merchant
         /// </summary>
         /// <returns>Converted string</returns>
-        public string AsDataForSignature() => $"{ServerTransactionId}|{PaymentRequest.AsString()}|{ServerTimeStampUTC:O}|{Success}|{RejectReason}";
+        public string AsDataForSignature() => $"{ServerTransactionId}|{PaymentRequest.AsString()}|{ServerTimeStampUTC:yyyy-MM-dd:HH.mm.ss.ffff}|{Success}|{RejectReason}";
     }
 }

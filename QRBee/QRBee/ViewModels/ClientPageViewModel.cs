@@ -61,10 +61,10 @@ namespace QRBee.ViewModels
                 if (result == null) 
                     return;
 
-                _merchantToClientRequest = MerchantToClientRequest.FromString(result);
-                Amount = $"{_merchantToClientRequest.Amount:N2}";
+                _merchantToClientRequest  = MerchantToClientRequest.FromString(result);
+                Amount                    = $"{_merchantToClientRequest.Amount:N2}";
                 IsAcceptDenyButtonVisible = true;
-                IsScanButtonVisible = false;
+                IsScanButtonVisible       = false;
             }
             catch (Exception)
             {
@@ -148,36 +148,40 @@ namespace QRBee.ViewModels
         public async void OnAcceptQrCommand(object obj)
         {
 
-            var answer = await Application.Current.MainPage.DisplayAlert("Confirmation", "Would you like to accept the offer?", "Yes", "No");
-            if (!answer) return;
+            var answer   = await Application.Current.MainPage.DisplayAlert("Confirmation", "Would you like to accept the offer?", "Yes", "No");
+            if (!answer)
+                return;
+
             var settings = _localSettings.LoadSettings();
+
             var response = new ClientToMerchantResponse
             {
-                ClientId = settings.ClientId,
-                TimeStampUTC = DateTime.UtcNow,
-                MerchantRequest = _merchantToClientRequest,
+                ClientId                = settings.ClientId,
+                TimeStampUTC            = DateTime.UtcNow,
+                MerchantRequest         = _merchantToClientRequest,
                 EncryptedClientCardData = EncryptCardData(settings, _merchantToClientRequest.MerchantTransactionId)
             };
-            var clientSignature = _securityService.Sign(Encoding.UTF8.GetBytes(response.AsDataForSignature()));
-            response.ClientSignature = Convert.ToBase64String(clientSignature);
 
-            QrCode = response.AsQRCodeString();
-            IsQrVisible = true;
+            var clientSignature       = _securityService.Sign(Encoding.UTF8.GetBytes(response.AsDataForSignature()));
+            response.ClientSignature  = Convert.ToBase64String(clientSignature);
+
+            QrCode                    = response.AsQRCodeString();
+            IsQrVisible               = true;
             IsAcceptDenyButtonVisible = false;
-            IsScanButtonVisible = true;
+            IsScanButtonVisible       = true;
         }
 
         private string EncryptCardData(Settings settings, string transactionId)
         {
            var clientCardData = new ClientCardData
            {
-               TransactionId      = transactionId,
-               CardNumber         = settings.CardNumber,
-               ExpirationDateMMYY = settings.ExpirationDate,
-               ValidFrom          = settings.ValidFrom,
-               CardHolderName     = settings.CardHolderName,
-               CVC                = settings.CVC,
-               IssueNo            = settings.IssueNo
+               TransactionId        = transactionId,
+               CardNumber           = settings.CardNumber,
+               ExpirationDateYYYYMM = string.IsNullOrWhiteSpace(settings.ExpirationDate) ? null : DateTime.Parse(settings.ExpirationDate).ToString("yyyy-MM"),
+               ValidFromYYYYMM      = string.IsNullOrWhiteSpace(settings.ValidFrom)      ? null : DateTime.Parse(settings.ValidFrom).ToString("yyyy-MM"),
+               CardHolderName       = settings.CardHolderName,
+               CVC                  = settings.CVC,
+               IssueNo              = settings.IssueNo
            };
 
            var bytes = _securityService.Encrypt(Encoding.UTF8.GetBytes(clientCardData.AsString()),_securityService.APIServerCertificate);

@@ -4,8 +4,8 @@
     {
         public string TransactionId      { get; set; }
         public string CardNumber         { get; set; }
-        public string ExpirationDateMMYY { get; set; }
-        public string ValidFrom          { get; set; }
+        public string ExpirationDateYYYYMM { get; set; }
+        public string ValidFromYYYYMM      { get; set; }
         public string CardHolderName     { get; set; }
         public string CVC                { get; set; }
         public int? IssueNo              { get; set; }
@@ -15,7 +15,7 @@
         /// WARNING: this should always be encrypted and never transmitted in clear text form.
         /// </summary>
         /// <returns>Converted string</returns>
-        public string AsString() => $"{TransactionId}|{CardNumber}|{ExpirationDateMMYY}|{ValidFrom}|{CardHolderName}|{CVC}|{IssueNo ?? 0}";
+        public string AsString() => $"{TransactionId}|{CardNumber}|{ExpirationDateYYYYMM}|{ValidFromYYYYMM}|{CardHolderName}|{CVC}|{IssueNo ?? 0}";
 
         public static ClientCardData FromString(string input)
         {
@@ -27,12 +27,12 @@
 
             var res = new ClientCardData()
             {
-                TransactionId = s[0],
-                CardNumber = s[1],
-                ExpirationDateMMYY = s[2],
-                ValidFrom = s[3],
-                CardHolderName = s[4],
-                CVC = s[5]
+                TransactionId      = s[0],
+                CardNumber         = s[1],
+                ExpirationDateYYYYMM = s[2],
+                ValidFromYYYYMM      = s[3],
+                CardHolderName     = s[4],
+                CVC                = s[5]
             };
 
             if (!string.IsNullOrWhiteSpace(s[6]))

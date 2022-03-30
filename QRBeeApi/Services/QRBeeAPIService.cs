@@ -14,21 +14,23 @@ namespace QRBee.Api.Services
     /// </summary>
     public class QRBeeAPIService: IQRBeeAPI
     {
-        private readonly IStorage _storage;
-        private readonly ISecurityService _securityService;
+        private readonly IStorage           _storage;
+        private readonly ISecurityService   _securityService;
         private readonly IPrivateKeyHandler _privateKeyHandler;
-        private readonly IPaymentGateway _paymentGateway;
-        private static readonly object _lock = new ();
+        private readonly IPaymentGateway    _paymentGateway;
+        private readonly ILogger<QRBeeAPIService> _logger;
+        private static readonly object      _lock = new ();
 
         private const int MaxNameLength = 512;
         private const int MaxEmailLength = 512;
 
-        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway)
+        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway, ILogger<QRBeeAPIService> logger)
         {
-            _storage = storage;
-            _securityService = securityService;
+            _storage           = storage;
+            _securityService   = securityService;
             _privateKeyHandler = privateKeyHandler;
-            _paymentGateway = paymentGateway;
+            _paymentGateway    = paymentGateway;
+            _logger            = logger;
             Init(_privateKeyHandler);
         }
 
@@ -48,14 +50,14 @@ namespace QRBee.Api.Services
 
             ValidateRegistration(request);
 
-            var info = Convert(request);
-
-            var clientId = await _storage.PutUserInfo(info);
-
+            var info      = Convert(request);
+                          
+            var clientId  = await _storage.PutUserInfo(info);
+                          
             using var rsa = LoadRsaPublicKey(request.CertificateRequest.RsaPublicKey);
-            var bytes = rsa.ExportRSAPublicKey();
-
-            var clientCertificate =  _securityService.CreateCertificate(clientId,bytes);
+            var bytes     = rsa.ExportRSAPublicKey();
+                                  
+            var clientCertificate = _securityService.CreateCertificate(clientId,bytes);
             
             var convertedClientCertificate = Convert(clientCertificate, clientId,request.Email);
             await _storage.InsertCertificate(convertedClientCertificate);
@@ -81,9 +83,9 @@ namespace QRBee.Api.Services
                 throw new NullReferenceException();
             }
 
-            var name = request.Name;
-            var email = request.Email;
-            var dateOfBirth = request.DateOfBirth;
+            var name               = request.Name;
+            var email              = request.Email;
+            var dateOfBirth        = request.DateOfBirth;
             var certificateRequest = request.CertificateRequest;
 
             if (string.IsNullOrEmpty(name) || name.All(char.IsLetter) == false || name.Length >= MaxNameLength)
@@ -126,10 +128,23 @@ namespace QRBee.Api.Services
 
         public async Task<PaymentResponse> Pay(PaymentRequest value)
         {
+
+            // --------------------------------- RECEIVE PAYMENT REQUEST --------------------------------------
+            // 
+            //                             ____   _ __   ____  __ _____ _   _ _____ 
+            //                            |  _ \ / \\ \ / /  \/  | ____| \ | |_   _|
+            //                            | |_) / _ \\ V /| |\/| |  _| |  \| | | |  
+            //                            |  __/ ___ \| | | |  | | |___| |\  | | |  
+            //                            |_| /_/   \_\_| |_|  |_|_____|_| \_| |_|  
+            //                                           
+            //
+
             try
             {
                 //1. Check payment request parameters for validity
                 ValidateTransaction(value);
+                var tid = value.ClientResponse.MerchantRequest.MerchantTransactionId;
+                _logger.LogInformation($"Transaction=\"{tid}\" Pre-validated");
 
                 //2. Check client signature
                 var t2 = CheckSignature(
@@ -144,22 +159,25 @@ namespace QRBee.Api.Services
                     value.ClientResponse.MerchantRequest.MerchantId);
 
                 //4. Check if transaction was already processed
-                var t4 = CheckTransaction(value.ClientResponse.MerchantRequest.MerchantTransactionId);
+                var t4 = CheckTransaction(tid);
 
                 //Parallel task execution
                 await Task.WhenAll(t2, t3, t4);
+                _logger.LogInformation($"Transaction=\"{tid}\" Fully validated");
 
                 //5. Decrypt client card data
                 var clientCardData = DecryptClientData(value.ClientResponse.EncryptedClientCardData);
 
                 //6. Check client card data for validity
-                await CheckClientCardData(clientCardData);
+                await CheckClientCardData(clientCardData, value.ClientResponse.MerchantRequest.MerchantTransactionId);
+                _logger.LogInformation($"Transaction=\"{tid}\" Client card data validated");
 
                 //7. Register preliminary transaction record with expiry of one minute
                 var info = Convert(value);
                 info.Status = TransactionInfo.TransactionStatus.Pending;
 
                 await _storage.PutTransactionInfo(info);
+                _logger.LogInformation($"Transaction=\"{tid}\" initialized");
 
                 //8. Send client card data to a payment gateway
                 var res = await _paymentGateway.Payment(info, clientCardData);
@@ -175,6 +193,7 @@ namespace QRBee.Api.Services
                     info.RejectReason = res.ErrorMessage;
                 }
                 await _storage.UpdateTransaction(info);
+                _logger.LogInformation($"Transaction=\"{tid}\" complete Status=\"{info.Status}\"");
 
                 //10. Make response for merchant
                 var response = MakePaymentResponse(value, info.TransactionId ?? "", info.Status==TransactionInfo.TransactionStatus.Succeeded, info.RejectReason);
@@ -194,14 +213,15 @@ namespace QRBee.Api.Services
             var response = new PaymentResponse
             {
                 ServerTransactionId = transactionId,
-                PaymentRequest = value,
-                ServerTimeStampUTC = DateTime.UtcNow,
-                Success = result,
-                RejectReason = errorMessage,
+                PaymentRequest      = value,
+                ServerTimeStampUTC  = DateTime.UtcNow,
+                Success             = result,
+                RejectReason        = errorMessage,
             };
 
-            var signature = _securityService.Sign(Encoding.UTF8.GetBytes(response.AsDataForSignature()));
+            var signature            = _securityService.Sign(Encoding.UTF8.GetBytes(response.AsDataForSignature()));
             response.ServerSignature = System.Convert.ToBase64String(signature);
+
             return response;
         }
 
@@ -212,10 +232,10 @@ namespace QRBee.Api.Services
                 throw new NullReferenceException();
             }
 
-            var clientId = request.ClientResponse.ClientId;
-            var merchantId = request.ClientResponse.MerchantRequest.MerchantId;
+            var clientId      = request.ClientResponse.ClientId;
+            var merchantId    = request.ClientResponse.MerchantRequest.MerchantId;
             var transactionId = request.ClientResponse.MerchantRequest.MerchantTransactionId;
-            var amount = request.ClientResponse.MerchantRequest.Amount;
+            var amount        = request.ClientResponse.MerchantRequest.Amount;
 
             if (clientId == null || merchantId == null || transactionId == null)
             {
@@ -230,7 +250,7 @@ namespace QRBee.Api.Services
 
         private async Task CheckSignature(string data,string signature, string id)
         {
-            var info = await _storage.GetCertificateInfoByUserId(id);
+            var info        = await _storage.GetCertificateInfoByUserId(id);
             var certificate = _securityService.Deserialize(info.Certificate);
 
             var check = _securityService.Verify(
@@ -246,8 +266,8 @@ namespace QRBee.Api.Services
 
         private async Task CheckTransaction(string transactionId)
         {
-            var info = await _storage.GetTransactionInfoByTransactionId(transactionId);
-            switch (info.Status)
+            var info = await _storage.TryGetTransactionInfoByTransactionId(transactionId);
+            switch (info?.Status)
             {
                 case TransactionInfo.TransactionStatus.Succeeded:
                     throw new ApplicationException($"Transaction with Id: {transactionId} was already made.");
@@ -262,18 +282,24 @@ namespace QRBee.Api.Services
 
         private ClientCardData DecryptClientData(string encryptedClientCardData)
         {
-            var info = System.Convert.FromBase64String(encryptedClientCardData);
+            var info  = System.Convert.FromBase64String(encryptedClientCardData);
             var bytes = _securityService.Decrypt(info);
-            var s = Encoding.UTF8.GetString(bytes);
+            var s     = Encoding.UTF8.GetString(bytes);
+
             return ClientCardData.FromString(s);
         }
 
-        private async Task CheckClientCardData(ClientCardData data)
+        private async Task CheckClientCardData(ClientCardData data, string merchantTransactionId)
         {
-            var transactionId = data.TransactionId;
-            var expirationDate = DateTime.Parse(data.ExpirationDateMMYY);
-            var validFrom = DateTime.Parse(data.ValidFrom);
-            var holderName = data.CardHolderName;
+            if ( data.TransactionId != merchantTransactionId)
+                throw new ApplicationException($"Transaction IDs don't match");
+
+            //_logger.LogInformation(data.AsString());
+
+            var transactionId  = data.TransactionId;
+            var expirationDate = string.IsNullOrWhiteSpace(data.ExpirationDateYYYYMM) ? default : DateTime.ParseExact(data.ExpirationDateYYYYMM, "yyyy-MM", null);
+            var validFrom      = string.IsNullOrWhiteSpace(data.ValidFromYYYYMM)      ? default : DateTime.ParseExact(data.ValidFromYYYYMM,      "yyyy-MM", null);
+            var holderName     = data.CardHolderName;
 
             await CheckTransaction(transactionId);
 

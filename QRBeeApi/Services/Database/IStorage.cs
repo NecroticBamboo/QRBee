@@ -32,6 +32,12 @@
         Task PutTransactionInfo(TransactionInfo info);
 
         /// <summary>
+        /// Try to find if the Transaction already exists in the database
+        /// </summary>
+        /// <param name="id">parameter by which to find TransactionInfo</param>
+        /// <returns>null if transaction doesn't exist or TransactionInfo</returns>
+        Task<TransactionInfo?> TryGetTransactionInfoByTransactionId(string id);
+        /// <summary>
         /// Retrieve transaction information from database
         /// </summary>
         /// <param name="id">Identifier by which transaction information will be retrieved</param>

@@ -24,38 +24,51 @@ namespace QRBee.ViewModels
 
         public MerchantPageViewModel(IQRScanner scanner, ILocalSettings settings, ISecurityService securityService)
         {
-            _scanner = scanner;
-            _settings = settings;
-            _securityService = securityService;
-            ScanCommand = new Command(OnScanButtonClicked);
+            _scanner          = scanner;
+            _settings         = settings;
+            _securityService  = securityService;
+            ScanCommand       = new Command(OnScanButtonClicked);
             GenerateQrCommand = new Command(OnGenerateQrClicked);
             var localSettings = DependencyService.Resolve<ILocalSettings>();
-            Name = localSettings.LoadSettings().Name;
+            Name              = localSettings.LoadSettings().Name;
         }
 
         private async void OnScanButtonClicked(object sender)
         {
             try
             {
-                var result = await _scanner.ScanQR();
-                if (result == null) 
+                var result          = await _scanner.ScanQR();
+                if (string.IsNullOrWhiteSpace(result)) 
                     return;
 
-                var client = new HttpClient(GetInsecureHandler());
+                var clientResponse  = ClientToMerchantResponse.FromString(result, _lastRequest);
 
-                var service = new Core.Client.Client(_settings.QRBeeApiUrl, client);
-                var clientResponse = ClientToMerchantResponse.FromString(result);
+                if (string.IsNullOrWhiteSpace(clientResponse.ClientSignature))
+                    throw new ApplicationException("Request is not signed by a client");
+                if (string.IsNullOrWhiteSpace(clientResponse.EncryptedClientCardData))
+                    throw new ApplicationException("Request does not contain client's card data");
 
-                clientResponse.MerchantRequest = _lastRequest;
-                var paymentRequest = new PaymentRequest
+                var paymentRequest  = new PaymentRequest
                 {
-                    ClientResponse = clientResponse
+                    ClientResponse  = clientResponse
                 };
 
                 //QrCode = null;
                 IsVisible = false;
 
-                var response = await service.PayAsync(paymentRequest);
+                // ------------------------------------- SEND PAYMENT REQUEST ------------------------------------------
+                // 
+                //                             ____   _ __   ____  __ _____ _   _ _____ 
+                //                            |  _ \ / \\ \ / /  \/  | ____| \ | |_   _|
+                //                            | |_) / _ \\ V /| |\/| |  _| |  \| | | |  
+                //                            |  __/ ___ \| | | |  | | |___| |\  | | |  
+                //                            |_| /_/   \_\_| |_|  |_|_____|_| \_| |_|  
+                //                                           
+                //
+                var apiService = new Core.Client.Client(_settings.QRBeeApiUrl, new HttpClient(GetInsecureHandler()));
+                var response   = await apiService.PayAsync(paymentRequest);
+                //
+                // -----------------------------------------------------------------------------------------------------
 
                 if (response.Success)
                 {
