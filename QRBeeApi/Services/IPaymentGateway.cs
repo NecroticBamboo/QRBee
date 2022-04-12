@@ -8,10 +8,14 @@ namespace QRBee.Api.Services
     {
         public bool Success { get; init; }
         public string? ErrorMessage { get; init; }
+
+        public string? GatewayTransactionId { get; init; }
     }
 
     public interface IPaymentGateway
     {
         Task<GatewayResponse> Payment(TransactionInfo info, ClientCardData clientCardData);
+
+        Task<GatewayResponse> CancelPayment(TransactionInfo info);
     }
 }

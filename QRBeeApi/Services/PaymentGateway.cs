@@ -20,13 +20,36 @@ internal class PaymentGateway : IPaymentGateway
             return Task.FromResult(new GatewayResponse
             {
                 Success = false,
-                ErrorMessage = "Amount is too low"
+                ErrorMessage = "Amount is too low",
+                GatewayTransactionId = Guid.NewGuid().ToString()
             });
         }
         _logger.LogInformation($"Transaction with id: {info.Id} succeeded");
         return Task.FromResult(new GatewayResponse
         {
-            Success = true
+            Success = true,
+            GatewayTransactionId = Guid.NewGuid().ToString()
+        });
+    }
+
+    public Task<GatewayResponse> CancelPayment(TransactionInfo info)
+    {
+        if (!string.IsNullOrWhiteSpace(info.GatewayTransactionId))
+        {
+            _logger.LogInformation($"Transaction with id: {info.Id} was cancelled");
+            return Task.FromResult(new GatewayResponse
+            {
+                Success = false,
+                ErrorMessage = "Either payment gateway isn't working or the transaction is old",
+                GatewayTransactionId = info.GatewayTransactionId
+            });
+        }
+
+        _logger.LogInformation($"Transaction with id: {info.Id} succeeded");
+        return Task.FromResult(new GatewayResponse
+        {
+            Success = true,
+            GatewayTransactionId = info.GatewayTransactionId
         });
     }
 }

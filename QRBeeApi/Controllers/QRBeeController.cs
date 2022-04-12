@@ -46,5 +46,12 @@ namespace QRBee.Api.Controllers
             _logger.LogInformation($"Trying to insert new transaction {value.ClientResponse.MerchantRequest.MerchantTransactionId}");
             return _service.Pay(value);
         }
+
+        [HttpPost("ConfirmPay")]
+        public Task ConfirmPay([FromBody] PaymentConfirmation value)
+        {
+            _logger.LogInformation($"Trying to confirm transaction with gatewayTransactionId: {value.GatewayTransactionId}");
+            return _service.ConfirmPay(value);
+        }
     }
 }

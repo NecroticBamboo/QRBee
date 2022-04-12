@@ -32,6 +32,7 @@ builder.Services
     .AddSingleton<IPrivateKeyHandler, ServerPrivateKeyHandler>()
     .AddSingleton<ISecurityService, SecurityService>()
     .AddSingleton<IPaymentGateway, PaymentGateway>()
+    .AddSingleton<TransactionMonitoring>()
     ;
 
 var app = builder.Build();

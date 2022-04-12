@@ -27,5 +27,7 @@ namespace QRBee.Api.Services
         /// <param name="value">Payment request</param>
         Task<PaymentResponse> Pay(PaymentRequest value);
 
+        Task ConfirmPay(PaymentConfirmation value);
+
     }
 }

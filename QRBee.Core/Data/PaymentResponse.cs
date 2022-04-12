@@ -4,6 +4,8 @@
     {
         public string ServerTransactionId { get; set; }
 
+        public string GatewayTransactionId { get; set; }
+
         public PaymentRequest PaymentRequest { get; set; }
 
         public DateTime ServerTimeStampUTC { get; set; }
@@ -18,6 +20,6 @@
         /// Convert PaymentResponse to string to be encrypted and transmitted back to merchant
         /// </summary>
         /// <returns>Converted string</returns>
-        public string AsDataForSignature() => $"{ServerTransactionId}|{PaymentRequest.AsString()}|{ServerTimeStampUTC:yyyy-MM-dd:HH.mm.ss.ffff}|{Success}|{RejectReason}";
+        public string AsDataForSignature() => $"{ServerTransactionId}|{GatewayTransactionId}|{PaymentRequest.AsString()}|{ServerTimeStampUTC:yyyy-MM-dd:HH.mm.ss.ffff}|{Success}|{RejectReason}";
     }
 }

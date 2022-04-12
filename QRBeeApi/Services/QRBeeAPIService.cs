@@ -19,18 +19,20 @@ namespace QRBee.Api.Services
         private readonly IPrivateKeyHandler _privateKeyHandler;
         private readonly IPaymentGateway    _paymentGateway;
         private readonly ILogger<QRBeeAPIService> _logger;
+        private readonly TransactionMonitoring _transactionMonitoring;
         private static readonly object      _lock = new ();
 
         private const int MaxNameLength = 512;
         private const int MaxEmailLength = 512;
 
-        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway, ILogger<QRBeeAPIService> logger)
+        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway, ILogger<QRBeeAPIService> logger, TransactionMonitoring transactionMonitoring)
         {
             _storage           = storage;
             _securityService   = securityService;
             _privateKeyHandler = privateKeyHandler;
             _paymentGateway    = paymentGateway;
             _logger            = logger;
+            _transactionMonitoring = transactionMonitoring;
             Init(_privateKeyHandler);
         }
 
@@ -180,39 +182,41 @@ namespace QRBee.Api.Services
                 _logger.LogInformation($"Transaction=\"{tid}\" initialized");
 
                 //8. Send client card data to a payment gateway
-                var res = await _paymentGateway.Payment(info, clientCardData);
+                var gatewayResponse = await _paymentGateway.Payment(info, clientCardData);
 
                 //9. Record transaction with result
-                if (res.Success)
+                if (gatewayResponse.Success)
                 {
                     info.Status=TransactionInfo.TransactionStatus.Succeeded;
+                    info.GatewayTransactionId=gatewayResponse.GatewayTransactionId;
                 }
                 else
                 {
                     info.Status = TransactionInfo.TransactionStatus.Rejected;
-                    info.RejectReason = res.ErrorMessage;
+                    info.RejectReason = gatewayResponse.ErrorMessage;
                 }
                 await _storage.UpdateTransaction(info);
                 _logger.LogInformation($"Transaction=\"{tid}\" complete Status=\"{info.Status}\"");
 
                 //10. Make response for merchant
-                var response = MakePaymentResponse(value, info.TransactionId ?? "", info.Status==TransactionInfo.TransactionStatus.Succeeded, info.RejectReason);
+                var response = MakePaymentResponse(value, info.TransactionId ?? "", gatewayResponse.GatewayTransactionId ?? "", info.Status==TransactionInfo.TransactionStatus.Succeeded, info.RejectReason);
                 return response;
             }
             catch (Exception e)
             {
-                var response = MakePaymentResponse(value, "", false, e.Message);
+                var response = MakePaymentResponse(value, "", "", false, e.Message);
                 return response;
             }
             
         }
 
-        private PaymentResponse MakePaymentResponse(PaymentRequest value, string transactionId, bool result = true, string? errorMessage = null)
+        private PaymentResponse MakePaymentResponse(PaymentRequest value, string transactionId, string gatewayTransactionId, bool result = true, string? errorMessage = null)
         {
             
             var response = new PaymentResponse
             {
                 ServerTransactionId = transactionId,
+                GatewayTransactionId = gatewayTransactionId,
                 PaymentRequest      = value,
                 ServerTimeStampUTC  = DateTime.UtcNow,
                 Success             = result,
@@ -362,6 +366,22 @@ namespace QRBee.Api.Services
                 Certificate     = convertedCertificate, 
                 ServerTimeStamp = DateTime.UtcNow
             };
+        }
+
+        public async Task ConfirmPay(PaymentConfirmation value)
+        {
+            var id = $"{value.MerchantId}-{value.MerchantTransactionId}";
+            var trans = await _storage.GetTransactionInfoByTransactionId(id);
+            if (trans.GatewayTransactionId == value.GatewayTransactionId)
+            {
+                trans.Status = TransactionInfo.TransactionStatus.Confirmed;
+                await _storage.UpdateTransaction(trans);
+                _logger.LogInformation($"Transaction with MerchantTransactionId: {trans.MerchantTransactionId} confirmed");
+            }
+            else
+            {
+                throw new ApplicationException($"Transaction with gatewayTransactionId:{value.GatewayTransactionId} failed.");
+            }
         }
 
     }

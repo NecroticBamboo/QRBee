@@ -29,6 +29,9 @@ namespace QRBee.Api.Services.Database
         [BsonId] public string Id { get; set; }
 
         [BsonIgnore] public string? TransactionId => Id;
+
+        public string? GatewayTransactionId { get; set; }
+        public string MerchantTransactionId => Request.ClientResponse.MerchantRequest.MerchantTransactionId;
         public DateTime ServerTimeStamp { get; set; }
 
         public PaymentRequest Request { get; set; }
@@ -38,6 +41,9 @@ namespace QRBee.Api.Services.Database
             Pending = 0,
             Rejected = 1,
             Succeeded = 2,
+            Confirmed = 3,
+            Cancelled = 4,
+            CancelFailed =5
         }
         public TransactionStatus Status { get; set; } = TransactionStatus.Pending;
 

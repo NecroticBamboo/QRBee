@@ -44,6 +44,8 @@
         /// <returns>Transaction information</returns>
         Task<TransactionInfo> GetTransactionInfoByTransactionId(string id);
 
+        Task<List<TransactionInfo>> GetTransactionsByStatus(TransactionInfo.TransactionStatus status);
+
         /// <summary>
         /// Update transaction after execution
         /// </summary>
@@ -70,5 +72,7 @@
         /// <param name="clientId">Identifier by which certificate information will be retrieved</param>
         /// <returns>Certificate information</returns>
         Task<CertificateInfo> GetCertificateInfoByUserId(string clientId);
+
+        
     }
 }

@@ -101,6 +101,20 @@ namespace QRBee.Api.Services.Database
             return transaction ?? throw new ApplicationException($"Transaction with Id: {id} not found.");
         }
 
+        public async Task<List<TransactionInfo>> GetTransactionsByStatus(TransactionInfo.TransactionStatus status)
+        {
+            var collection = _database.GetCollection<TransactionInfo>("Transactions");
+            using var cursor = await collection.FindAsync($"{{ Status: {(int)status} }}");
+
+            var result = new List<TransactionInfo>();
+
+            while (await cursor.MoveNextAsync())
+            {
+                result.AddRange(cursor.Current);
+            }
+            return result;
+        }
+
         public async Task UpdateTransaction(TransactionInfo info)
         {
             var collection = _database.GetCollection<TransactionInfo>("Transactions");

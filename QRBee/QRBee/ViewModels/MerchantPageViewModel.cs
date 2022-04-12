@@ -80,6 +80,14 @@ namespace QRBee.ViewModels
 
                     if (check)
                     {
+                        var paymentConfirmation = new PaymentConfirmation
+                        {
+                            MerchantId = _settings.LoadSettings().ClientId,
+                            MerchantTransactionId = response.PaymentRequest.ClientResponse.MerchantRequest.MerchantTransactionId,
+                            GatewayTransactionId = response.GatewayTransactionId
+                        };
+
+                        await apiService.ConfirmPayAsync(paymentConfirmation);
                         await Application.Current.MainPage.DisplayAlert("Success", "The transaction completed successfully ", "Ok");
                     }
                     else
