@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QRBee.Api", "QRBeeApi\QRBee
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QRBee.Core", "QRBee.Core\QRBee.Core.csproj", "{7C461562-66EF-4894-8AD8-F27F0B94053F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "QRBee.Tests", "QRBee.Tests\QRBee.Tests.csproj", "{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,18 @@ Global
 		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhone.Build.0 = Release|Any CPU
 		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{7C461562-66EF-4894-8AD8-F27F0B94053F}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Release|iPhone.Build.0 = Release|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{C48223E7-4AEF-4F6B-A8A0-DDE16B7111DA}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
