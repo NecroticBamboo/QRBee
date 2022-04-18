@@ -90,7 +90,7 @@ namespace QRBee.Api.Services
             var dateOfBirth        = request.DateOfBirth;
             var certificateRequest = request.CertificateRequest;
 
-            if (string.IsNullOrEmpty(name) || name.All(char.IsLetter) == false || name.Length >= MaxNameLength)
+            if (string.IsNullOrEmpty(name) || name.Length >= MaxNameLength)
             {
                 throw new ApplicationException($"Name \"{name}\" isn't valid");
             }
