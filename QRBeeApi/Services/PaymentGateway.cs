@@ -14,13 +14,13 @@ internal class PaymentGateway : IPaymentGateway
 
     public Task<GatewayResponse> Payment(TransactionInfo info, ClientCardData clientCardData)
     {
-        if (info.Request.ClientResponse.MerchantRequest.Amount < 10)
+        if (info.Request.ClientResponse.MerchantRequest.Amount > 100)
         {
             _logger.LogInformation($"Transaction with id: {info.Id} failed");
             return Task.FromResult(new GatewayResponse
             {
                 Success = false,
-                ErrorMessage = "Amount is too low",
+                ErrorMessage = "Amount is too high",
                 GatewayTransactionId = Guid.NewGuid().ToString()
             });
         }
