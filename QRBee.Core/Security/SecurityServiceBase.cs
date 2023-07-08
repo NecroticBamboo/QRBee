@@ -7,13 +7,15 @@ namespace QRBee.Core.Security
 
     public abstract class SecurityServiceBase : ISecurityService
     {
-        protected IPrivateKeyHandler PrivateKeyHandler { get; }
+        private IPrivateKeyHandler _privateKeyHandler;
 
         protected SecurityServiceBase(IPrivateKeyHandler privateKeyHandler)
         {
-            PrivateKeyHandler = privateKeyHandler;
+            _privateKeyHandler = privateKeyHandler;
         }
 
+        /// <inheritdoc/>
+        public IPrivateKeyHandler PrivateKeyHandler => _privateKeyHandler;
 
         /// <inheritdoc/>
         public abstract X509Certificate2 CreateCertificate(string subjectName, byte[] rsaPublicKey);

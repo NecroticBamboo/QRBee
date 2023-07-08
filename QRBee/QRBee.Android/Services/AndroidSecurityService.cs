@@ -8,8 +8,10 @@ namespace QRBee.Droid.Services
 {
     internal class AndroidSecurityService : SecurityServiceBase
     {
-        private X509Certificate2 _apiServerCertificate;
-        private string ApiServerCertificateFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/ApiServerCertificate.bin";
+#pragma warning disable CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+        private X509Certificate2? _apiServerCertificate;
+#pragma warning restore CS8632 // The annotation for nullable reference types should only be used in code within a '#nullable' annotations context.
+        public static string ApiServerCertificateFileName => $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/ApiServerCertificate.bin";
 
         public AndroidSecurityService(IPrivateKeyHandler privateKeyHandler)
         : base(privateKeyHandler)

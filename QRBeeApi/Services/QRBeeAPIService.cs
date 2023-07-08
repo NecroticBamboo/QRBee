@@ -204,6 +204,7 @@ namespace QRBee.Api.Services
             }
             catch (Exception e)
             {
+                _logger.LogError(e, $"Transaction failed. Merchant={value.ClientResponse.MerchantRequest.MerchantId} Client={value.ClientResponse.ClientId}");
                 var response = MakePaymentResponse(value, "", "", false, e.Message);
                 return response;
             }
@@ -317,10 +318,10 @@ namespace QRBee.Api.Services
                 throw new ApplicationException($"The valid from date: {validFrom} is wrong");
             }
 
-            if (holderName.Any(char.IsDigit))
-            {
-                throw new ApplicationException($"The card holder name: {holderName} is wrong");
-            }
+            //if (holderName.Any(char.IsDigit))
+            //{
+            //    throw new ApplicationException($"The card holder name: {holderName} is wrong");
+            //}
         }
 
         private static RSA LoadRsaPublicKey(StringRSAParameters stringParameters)

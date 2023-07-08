@@ -2,6 +2,8 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace QRBee.Api.Services
 {
@@ -20,7 +22,7 @@ namespace QRBee.Api.Services
 
         private const string VeryBadNeverUseCertificatePassword = "+ñèbòFëc×ŽßRúß¿ãçPN";
 
-        private string PrivateKeyFileName { get; set; } = $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{FileName}";
+        protected string PrivateKeyFileName { get; set; } = $"{Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData)}/{FileName}";
         private string PrivateKeyCertificatePassword { get; set; } = VeryBadNeverUseCertificatePassword;
 
         public ServerPrivateKeyHandler(ILogger<ServerPrivateKeyHandler> logger, IConfiguration config)

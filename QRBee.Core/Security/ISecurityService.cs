@@ -7,6 +7,12 @@ namespace QRBee.Core.Security
     /// </summary>
     public interface ISecurityService
     {
+        /// <summary>
+        /// Private key handler
+        /// </summary>
+        /// <returns></returns>
+        IPrivateKeyHandler PrivateKeyHandler { get; }
+
         // -------------------------- encryption --------------------------
 
         /// <summary>
