@@ -1,6 +1,7 @@
 ﻿using QRBee.Api.Services.Database;
 using QRBee.Core.Data;
 using QRBee.Core.Security;
+using System.Diagnostics;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -22,10 +23,12 @@ namespace QRBee.Api.Services
         private readonly TransactionMonitoring _transactionMonitoring;
         private static readonly object      _lock = new ();
 
+        private readonly CustomMetrics _customMetrics;
+
         private const int MaxNameLength = 512;
         private const int MaxEmailLength = 512;
 
-        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway, ILogger<QRBeeAPIService> logger, TransactionMonitoring transactionMonitoring)
+        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway, ILogger<QRBeeAPIService> logger, TransactionMonitoring transactionMonitoring, CustomMetrics metrics)
         {
             _storage           = storage;
             _securityService   = securityService;
@@ -34,6 +37,8 @@ namespace QRBee.Api.Services
             _logger            = logger;
             _transactionMonitoring = transactionMonitoring;
             Init(_privateKeyHandler);
+
+            _customMetrics = metrics;
         }
 
         private static void Init(IPrivateKeyHandler privateKeyHandler)
@@ -143,6 +148,9 @@ namespace QRBee.Api.Services
 
             try
             {
+
+                _customMetrics.AddMerchantRequest();
+
                 //1. Check payment request parameters for validity
                 ValidateTransaction(value);
                 var tid = value.ClientResponse.MerchantRequest.MerchantTransactionId;
@@ -168,13 +176,20 @@ namespace QRBee.Api.Services
                 _logger.LogInformation($"Transaction=\"{tid}\" Fully validated");
 
                 //5. Decrypt client card data
+                var creditCardCheckTime = Stopwatch.StartNew();
                 var clientCardData = DecryptClientData(value.ClientResponse.EncryptedClientCardData);
 
                 //6. Check client card data for validity
                 await CheckClientCardData(clientCardData, value.ClientResponse.MerchantRequest.MerchantTransactionId);
                 _logger.LogInformation($"Transaction=\"{tid}\" Client card data validated");
 
+                var milliseconds = creditCardCheckTime.ElapsedMilliseconds;
+                creditCardCheckTime.Stop();
+                _customMetrics.AddTotalCreditCardCheckTime(milliseconds);
+
                 //7. Register preliminary transaction record with expiry of one minute
+                var paymentTime = Stopwatch.StartNew();
+
                 var info = Convert(value);
                 info.Status = TransactionInfo.TransactionStatus.Pending;
 
@@ -184,22 +199,32 @@ namespace QRBee.Api.Services
                 //8. Send client card data to a payment gateway
                 var gatewayResponse = await _paymentGateway.Payment(info, clientCardData);
 
+                milliseconds = paymentTime.ElapsedMilliseconds;
+                paymentTime.Stop();
+                _customMetrics.AddTotalPaymentTime(milliseconds);
+
                 //9. Record transaction with result
                 if (gatewayResponse.Success)
                 {
                     info.Status=TransactionInfo.TransactionStatus.Succeeded;
                     info.GatewayTransactionId=gatewayResponse.GatewayTransactionId;
+
+                    _customMetrics.AddSucceededTransaction();
                 }
                 else
                 {
                     info.Status = TransactionInfo.TransactionStatus.Rejected;
                     info.RejectReason = gatewayResponse.ErrorMessage;
+
+                    _customMetrics.AddFailedTransaction();
                 }
                 await _storage.UpdateTransaction(info);
                 _logger.LogInformation($"Transaction=\"{tid}\" complete Status=\"{info.Status}\"");
 
                 //10. Make response for merchant
                 var response = MakePaymentResponse(value, info.TransactionId ?? "", gatewayResponse.GatewayTransactionId ?? "", info.Status==TransactionInfo.TransactionStatus.Succeeded, info.RejectReason);
+
+                _customMetrics.AddMerchantResponse();
                 return response;
             }
             catch (Exception e)

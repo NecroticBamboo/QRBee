@@ -14,10 +14,13 @@ GlobalContext.Properties["LOGS_ROOT"] = Environment.GetEnvironmentVariable("LOGS
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 builder.Logging.AddLog4Net("log4net.config");
 
+var meters = new CustomMetrics();
+
 builder.Services.AddOpenTelemetry()
     .WithMetrics(options =>
     {
         options
+            .AddMeter(meters.MetricName)
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
             .AddRuntimeInstrumentation()
@@ -50,6 +53,7 @@ builder.Services
     .AddSingleton<ISecurityService, SecurityService>()
     .AddSingleton<IPaymentGateway, PaymentGateway>()
     .AddSingleton<TransactionMonitoring>()
+    .AddSingleton<CustomMetrics>()
     ;
 
 var app = builder.Build();
