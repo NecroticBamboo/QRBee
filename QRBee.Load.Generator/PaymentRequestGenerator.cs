@@ -32,6 +32,8 @@ internal class PaymentRequestGenerator
 
         if (_largeAmountValue <= 0.0)
             _largeAmountProbability = 0.0;
+        else
+            _logger.LogDebug($"Large amount spike configured: Probability={_largeAmountProbability} Value=\"{_largeAmountValue}\"");
     }
 
     public async Task<PaymentRequest> GeneratePaymentRequest(int clientId, int merchantId)
@@ -79,9 +81,10 @@ internal class PaymentRequestGenerator
 
     private decimal GetAmount()
     {
-        if (_rng.NextDouble() < _largeAmountProbability)
+        var dice = _rng.NextDouble();
+        if (dice < _largeAmountProbability)
         {
-            _logger.LogWarning($"Anomaly: Large amount");
+            _logger.LogWarning($"Anomaly: Large amount Dice={dice}");
             return Convert.ToDecimal(_rng.NextDoubleInRange(_largeAmountValue, _largeAmountValue* 1.10));
         }
         return Convert.ToDecimal(_rng.NextDoubleInRange(_minAmount, _maxAmount));

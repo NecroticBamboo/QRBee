@@ -14,6 +14,10 @@ internal class LoadGenerator : IHostedService
     private readonly ILogger<LoadGenerator> _logger;
     private readonly IOptions<GeneratorSettings> _settings;
 
+    private TimeSpan _spikeDuration;
+    private TimeSpan _spikeDelay;
+    private double _spikeProbability;
+
     public LoadGenerator( 
         QRBee.Core.Client.Client client, 
         ClientPool clientPool, 
@@ -27,6 +31,28 @@ internal class LoadGenerator : IHostedService
         _paymentRequestGenerator = paymentRequestGenerator;
         _logger                  = logger;
         _settings                = settings;
+
+        var loadSpike     = _settings.Value.LoadSpike;
+        _spikeDuration    = TimeSpan.Zero;
+        _spikeDelay       = TimeSpan.Zero;
+        _spikeProbability = loadSpike?.Probability ?? 0.0;
+
+        if (loadSpike != null && loadSpike.Probability > 0.0)
+        {
+            if (!loadSpike.Parameters.TryGetValue("Duration", out var duration)
+                || !TimeSpan.TryParse(duration, out _spikeDuration))
+            {
+                _spikeProbability = 0.0;
+            }
+            else
+            {
+                if (!loadSpike.Parameters.TryGetValue("Delay", out duration)
+                    || !TimeSpan.TryParse(duration, out _spikeDelay))
+                {
+                    _spikeDelay = TimeSpan.FromMilliseconds(10);
+                }
+            }
+        }
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -114,7 +140,7 @@ internal class LoadGenerator : IHostedService
 
                 var tasks = newQueue.ToList();
 
-                while (tasks.Any(x => !x.IsCompleted))
+                while (tasks.Any())
                 {
                     try
                     {
@@ -127,6 +153,7 @@ internal class LoadGenerator : IHostedService
                     {
                         Interlocked.Increment(ref _paymentsFailed);
                         _logger.LogError(ex, "Confirmation thread");
+                        tasks = tasks.Where(x => x != null).ToList();
                     }
                 }
             }
@@ -205,27 +232,6 @@ internal class LoadGenerator : IHostedService
         await Task.Delay(500 + _rng.Next() % 124);
 
         var spikeEnd         = DateTime.MinValue;
-        var loadSpike        = _settings.Value.LoadSpike;
-        var spikeDuration    = TimeSpan.Zero;
-        var spikeDelay       = TimeSpan.Zero;
-        var spikeProbability = loadSpike?.Probability ?? 0.0;
-
-        if ( loadSpike != null && loadSpike.Probability > 0.0 )
-        {
-            if ( !loadSpike.Parameters.TryGetValue("Duration", out var duration)
-                || !TimeSpan.TryParse( duration, out spikeDuration ) )
-            {
-                spikeProbability = 0.0;
-            }
-            else
-            {
-                if (!loadSpike.Parameters.TryGetValue("Delay", out duration)
-                    || !TimeSpan.TryParse(duration, out spikeDelay))
-                {
-                    spikeDelay = TimeSpan.FromMilliseconds(10);
-                }
-            }
-        }
 
         while (true)
         {
@@ -249,12 +255,13 @@ internal class LoadGenerator : IHostedService
 
             if (DateTime.Now > spikeEnd)
             {
-                if (loadSpike != null && _rng.NextDouble() < spikeProbability)
+                var dice = _rng.NextDouble();
+                if (dice < _spikeProbability)
                 {
                     // start load spike
-                    spikeEnd = DateTime.Now + spikeDuration;
-                    _logger.LogWarning($"Anomaly: Load spike until {spikeEnd}");
-                    await Task.Delay(spikeDuration);
+                    spikeEnd = DateTime.Now + _spikeDuration;
+                    _logger.LogWarning($"Anomaly: Load spike until {spikeEnd} Dice={dice}");
+                    await Task.Delay(_spikeDelay);
                 }
                 else
                 {
@@ -266,7 +273,7 @@ internal class LoadGenerator : IHostedService
             }
             else
             {
-                await Task.Delay(spikeDuration);
+                await Task.Delay(_spikeDelay);
             }
         }
     }
