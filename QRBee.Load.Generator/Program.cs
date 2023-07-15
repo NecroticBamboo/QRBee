@@ -30,6 +30,7 @@ builder.ConfigureServices((context, services) =>
         .Configure<GeneratorSettings>(context.Configuration.GetSection("GeneratorSettings"))
         .AddSingleton<ClientPool>()
         .AddSingleton<PaymentRequestGenerator>()
+        .AddSingleton<TransactionDefiler>()
         .AddSingleton<PrivateKeyHandlerFactory>(x => no => new PrivateKeyHandler(x.GetRequiredService<ILogger<ServerPrivateKeyHandler>>(), x.GetRequiredService<IConfiguration>(), no))
         .AddSingleton<SecurityServiceFactory>(x => no => new AndroidSecurityService(x.GetRequiredService<PrivateKeyHandlerFactory>()(no)))
         .AddHostedService<LoadGenerator>()

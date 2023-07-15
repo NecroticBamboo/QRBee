@@ -172,8 +172,17 @@ namespace QRBee.Api.Services
                 var t4 = CheckTransaction(tid);
 
                 //Parallel task execution
-                await Task.WhenAll(t2, t3, t4);
-                _logger.LogInformation($"Transaction=\"{tid}\" Fully validated");
+                try
+                {
+                    await Task.WhenAll(t2, t3, t4);
+                    _logger.LogInformation($"Transaction=\"{tid}\" Fully validated");
+                } 
+                catch(Exception)
+                {
+                    _customMetrics.AddCorruptTransaction();
+                    throw;
+                }
+                
 
                 //5. Decrypt client card data
                 var creditCardCheckTime = Stopwatch.StartNew();
@@ -206,17 +215,17 @@ namespace QRBee.Api.Services
                 //9. Record transaction with result
                 if (gatewayResponse.Success)
                 {
+                    _customMetrics.AddSucceededTransaction();
+
                     info.Status=TransactionInfo.TransactionStatus.Succeeded;
                     info.GatewayTransactionId=gatewayResponse.GatewayTransactionId;
-
-                    _customMetrics.AddSucceededTransaction();
                 }
                 else
                 {
+                    _customMetrics.AddFailedTransaction();
+
                     info.Status = TransactionInfo.TransactionStatus.Rejected;
                     info.RejectReason = gatewayResponse.ErrorMessage;
-
-                    _customMetrics.AddFailedTransaction();
                 }
                 await _storage.UpdateTransaction(info);
                 _logger.LogInformation($"Transaction=\"{tid}\" complete Status=\"{info.Status}\"");
@@ -403,9 +412,11 @@ namespace QRBee.Api.Services
                 trans.Status = TransactionInfo.TransactionStatus.Confirmed;
                 await _storage.UpdateTransaction(trans);
                 _logger.LogInformation($"Transaction with MerchantTransactionId: {trans.MerchantTransactionId} confirmed");
+                _customMetrics.AddSucceededPaymentConfirmation();
             }
             else
             {
+                _customMetrics.AddFailedPaymentConfirmation();
                 throw new ApplicationException($"Transaction with gatewayTransactionId:{value.GatewayTransactionId} failed.");
             }
         }

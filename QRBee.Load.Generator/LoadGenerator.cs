@@ -11,6 +11,7 @@ internal class LoadGenerator : IHostedService
     private readonly Client _client;
     private readonly ClientPool _clientPool;
     private readonly PaymentRequestGenerator _paymentRequestGenerator;
+    private readonly TransactionDefiler _transactionDefiler;
     private readonly ILogger<LoadGenerator> _logger;
     private readonly IOptions<GeneratorSettings> _settings;
 
@@ -21,7 +22,8 @@ internal class LoadGenerator : IHostedService
     public LoadGenerator( 
         QRBee.Core.Client.Client client, 
         ClientPool clientPool, 
-        PaymentRequestGenerator paymentRequestGenerator, 
+        PaymentRequestGenerator paymentRequestGenerator,
+        TransactionDefiler transactionDefiler,
         ILogger<LoadGenerator> logger,
         IOptions<GeneratorSettings> settings
         ) 
@@ -29,6 +31,7 @@ internal class LoadGenerator : IHostedService
         _client                  = client;
         _clientPool              = clientPool;
         _paymentRequestGenerator = paymentRequestGenerator;
+        _transactionDefiler      = transactionDefiler;
         _logger                  = logger;
         _settings                = settings;
 
@@ -204,6 +207,8 @@ internal class LoadGenerator : IHostedService
                                 GatewayTransactionId  = res.GatewayTransactionId
                             };
 
+                            _transactionDefiler.CorruptPaymentConfirmation(paymentConfirmation);
+
                             var confirmationTask = _client.ConfirmPayAsync(paymentConfirmation);
                             _confirmationQueue.Add(confirmationTask);
                         }
@@ -241,6 +246,8 @@ internal class LoadGenerator : IHostedService
                     _rng.NextInRange(1, _settings.Value.NumberOfClients + 1),
                     _rng.NextInRange(1, _settings.Value.NumberOfMerchants + 1)
                     );
+
+                _transactionDefiler.CorruptPaymentRequest(req);
 
                 var resp = _client.PayAsync(req);
 
