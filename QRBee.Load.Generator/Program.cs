@@ -7,6 +7,7 @@ using QRBee.Api.Services;
 using QRBee.Droid.Services;
 using QRBee.Load.Generator;
 using Microsoft.Extensions.Configuration;
+using System.Net;
 
 Console.WriteLine("=== QRBee artificaial load generator ===");
 
@@ -31,13 +32,15 @@ builder.ConfigureServices((context, services) =>
         .AddSingleton<ClientPool>()
         .AddSingleton<PaymentRequestGenerator>()
         .AddSingleton<TransactionDefiler>()
+        .AddSingleton<UnconfirmedTransactions>()
+        .AddSingleton<LoadSpike>()
         .AddSingleton<PrivateKeyHandlerFactory>(x => no => new PrivateKeyHandler(x.GetRequiredService<ILogger<ServerPrivateKeyHandler>>(), x.GetRequiredService<IConfiguration>(), no))
         .AddSingleton<SecurityServiceFactory>(x => no => new AndroidSecurityService(x.GetRequiredService<PrivateKeyHandlerFactory>()(no)))
         .AddHostedService<LoadGenerator>()
         ;
 });
 
-
+ServicePointManager.DefaultConnectionLimit = 500;
 
 var host = builder.Build();
 host.Run();

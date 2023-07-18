@@ -8,22 +8,22 @@ using QRBee.Load.Generator;
 
 internal class LoadGenerator : IHostedService
 {
-    private readonly Client _client;
-    private readonly ClientPool _clientPool;
-    private readonly PaymentRequestGenerator _paymentRequestGenerator;
-    private readonly TransactionDefiler _transactionDefiler;
-    private readonly ILogger<LoadGenerator> _logger;
+    private readonly Client                      _client;
+    private readonly ClientPool                  _clientPool;
+    private readonly PaymentRequestGenerator     _paymentRequestGenerator;
+    private readonly TransactionDefiler          _transactionDefiler;
+    private readonly UnconfirmedTransactions     _unconfirmedTransactions;
+    private readonly LoadSpike                   _loadSpike;
+    private readonly ILogger<LoadGenerator>      _logger;
     private readonly IOptions<GeneratorSettings> _settings;
-
-    private TimeSpan _spikeDuration;
-    private TimeSpan _spikeDelay;
-    private double _spikeProbability;
 
     public LoadGenerator( 
         QRBee.Core.Client.Client client, 
         ClientPool clientPool, 
         PaymentRequestGenerator paymentRequestGenerator,
         TransactionDefiler transactionDefiler,
+        UnconfirmedTransactions unconfirmedTransactions,
+        LoadSpike loadSpike,
         ILogger<LoadGenerator> logger,
         IOptions<GeneratorSettings> settings
         ) 
@@ -32,30 +32,10 @@ internal class LoadGenerator : IHostedService
         _clientPool              = clientPool;
         _paymentRequestGenerator = paymentRequestGenerator;
         _transactionDefiler      = transactionDefiler;
+        _unconfirmedTransactions = unconfirmedTransactions;
+        _loadSpike               = loadSpike;
         _logger                  = logger;
         _settings                = settings;
-
-        var loadSpike     = _settings.Value.LoadSpike;
-        _spikeDuration    = TimeSpan.Zero;
-        _spikeDelay       = TimeSpan.Zero;
-        _spikeProbability = loadSpike?.Probability ?? 0.0;
-
-        if (loadSpike != null && loadSpike.Probability > 0.0)
-        {
-            if (!loadSpike.Parameters.TryGetValue("Duration", out var duration)
-                || !TimeSpan.TryParse(duration, out _spikeDuration))
-            {
-                _spikeProbability = 0.0;
-            }
-            else
-            {
-                if (!loadSpike.Parameters.TryGetValue("Delay", out duration)
-                    || !TimeSpan.TryParse(duration, out _spikeDelay))
-                {
-                    _spikeDelay = TimeSpan.FromMilliseconds(10);
-                }
-            }
-        }
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -200,17 +180,20 @@ internal class LoadGenerator : IHostedService
 
                         if (res?.Success ?? false)
                         {
-                            var paymentConfirmation = new PaymentConfirmation
+                            if (_unconfirmedTransactions.ShouldConfirm())
                             {
-                                MerchantId            = res.PaymentRequest.ClientResponse.MerchantRequest.MerchantId,
-                                MerchantTransactionId = res.PaymentRequest.ClientResponse.MerchantRequest.MerchantTransactionId,
-                                GatewayTransactionId  = res.GatewayTransactionId
-                            };
+                                var paymentConfirmation = new PaymentConfirmation
+                                {
+                                    MerchantId            = res.PaymentRequest.ClientResponse.MerchantRequest.MerchantId,
+                                    MerchantTransactionId = res.PaymentRequest.ClientResponse.MerchantRequest.MerchantTransactionId,
+                                    GatewayTransactionId  = res.GatewayTransactionId
+                                };
 
-                            _transactionDefiler.CorruptPaymentConfirmation(paymentConfirmation);
+                                _transactionDefiler.CorruptPaymentConfirmation(paymentConfirmation);
 
-                            var confirmationTask = _client.ConfirmPayAsync(paymentConfirmation);
-                            _confirmationQueue.Add(confirmationTask);
+                                var confirmationTask = _client.ConfirmPayAsync(paymentConfirmation);
+                                _confirmationQueue.Add(confirmationTask);
+                            }
                         }
                         else
                             Interlocked.Increment(ref _paymentsFailed);
@@ -236,8 +219,6 @@ internal class LoadGenerator : IHostedService
         // initial delay
         await Task.Delay(500 + _rng.Next() % 124);
 
-        var spikeEnd         = DateTime.MinValue;
-
         while (true)
         {
             try
@@ -260,28 +241,7 @@ internal class LoadGenerator : IHostedService
                 _logger.LogError(ex, "Generation thread");
             }
 
-            if (DateTime.Now > spikeEnd)
-            {
-                var dice = _rng.NextDouble();
-                if (dice < _spikeProbability)
-                {
-                    // start load spike
-                    spikeEnd = DateTime.Now + _spikeDuration;
-                    _logger.LogWarning($"Anomaly: Load spike until {spikeEnd} Dice={dice}");
-                    await Task.Delay(_spikeDelay);
-                }
-                else
-                {
-                    await Task.Delay(_rng.NextInRange(
-                        _settings.Value.DelayBetweenMessagesMSec,
-                        _settings.Value.DelayBetweenMessagesMSec + _settings.Value.DelayJitterMSec
-                        ));
-                }
-            }
-            else
-            {
-                await Task.Delay(_spikeDelay);
-            }
+            await _loadSpike.Delay();
         }
     }
 }

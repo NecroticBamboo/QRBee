@@ -15,20 +15,28 @@ namespace QRBee.Api.Services
     /// </summary>
     public class QRBeeAPIService: IQRBeeAPI
     {
-        private readonly IStorage           _storage;
-        private readonly ISecurityService   _securityService;
-        private readonly IPrivateKeyHandler _privateKeyHandler;
-        private readonly IPaymentGateway    _paymentGateway;
+        private readonly IStorage                 _storage;
+        private readonly ISecurityService         _securityService;
+        private readonly IPrivateKeyHandler       _privateKeyHandler;
+        private readonly IPaymentGateway          _paymentGateway;
         private readonly ILogger<QRBeeAPIService> _logger;
-        private readonly TransactionMonitoring _transactionMonitoring;
-        private static readonly object      _lock = new ();
+        private readonly TransactionMonitoring    _transactionMonitoring;
+        private static readonly object            _lock = new ();
 
-        private readonly CustomMetrics _customMetrics;
+        private readonly CustomMetrics            _customMetrics;
 
         private const int MaxNameLength = 512;
         private const int MaxEmailLength = 512;
 
-        public QRBeeAPIService(IStorage storage, ISecurityService securityService, IPrivateKeyHandler privateKeyHandler, IPaymentGateway paymentGateway, ILogger<QRBeeAPIService> logger, TransactionMonitoring transactionMonitoring, CustomMetrics metrics)
+        public QRBeeAPIService(
+            IStorage storage,
+            ISecurityService securityService,
+            IPrivateKeyHandler privateKeyHandler,
+            IPaymentGateway paymentGateway,
+            ILogger<QRBeeAPIService> logger,
+            TransactionMonitoring transactionMonitoring,
+            CustomMetrics metrics
+            )
         {
             _storage           = storage;
             _securityService   = securityService;
@@ -132,8 +140,19 @@ namespace QRBee.Api.Services
                 throw new ApplicationException($"Digital signature is not valid.");
             }
         }
-
         public async Task<PaymentResponse> Pay(PaymentRequest value)
+        {
+            _customMetrics.IncreaseConcurrentPayments();
+            try
+            {
+                return await PayInternal(value);
+            }
+            finally
+            {
+                _customMetrics.DecreaseConcurrentPayments();
+            }
+        }
+        public async Task<PaymentResponse> PayInternal(PaymentRequest value)
         {
 
             // --------------------------------- RECEIVE PAYMENT REQUEST --------------------------------------
@@ -232,6 +251,7 @@ namespace QRBee.Api.Services
 
                 //10. Make response for merchant
                 var response = MakePaymentResponse(value, info.TransactionId ?? "", gatewayResponse.GatewayTransactionId ?? "", info.Status==TransactionInfo.TransactionStatus.Succeeded, info.RejectReason);
+                
 
                 _customMetrics.AddMerchantResponse();
                 return response;
@@ -404,6 +424,18 @@ namespace QRBee.Api.Services
         }
 
         public async Task ConfirmPay(PaymentConfirmation value)
+        {
+            _customMetrics.IncreaseConcurrentConfirmations();
+            try
+            {
+                await ConfirmPayInternal(value);
+            }
+            finally
+            {
+                _customMetrics.DecreaseConcurrentConfirmation();
+            }
+        }
+        public async Task ConfirmPayInternal(PaymentConfirmation value)
         {
             var id = $"{value.MerchantId}-{value.MerchantTransactionId}";
             var trans = await _storage.GetTransactionInfoByTransactionId(id);

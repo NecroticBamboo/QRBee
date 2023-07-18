@@ -19,5 +19,5 @@ internal class GeneratorSettings
     public Anomaly LoadSpike   { get; set; } = new();
     public Anomaly LargeAmount { get; set; } = new();
     public Anomaly TransactionCorruption { get; set;} = new();
-    public Anomaly CoherentTransactionCorruption { get; set; } = new();
+    public Anomaly UnconfirmedTransaction { get; set; } = new();
 }
