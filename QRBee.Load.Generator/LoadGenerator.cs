@@ -36,6 +36,8 @@ internal class LoadGenerator : IHostedService
         _loadSpike               = loadSpike;
         _logger                  = logger;
         _settings                = settings;
+
+        _logger.LogInformation($"Connected to QRBee on {_client.BaseUrl}");
     }
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -70,12 +72,28 @@ internal class LoadGenerator : IHostedService
     {
         DateTime nextReport = DateTime.MinValue;
 
+        var lastPaymentsGenerated = 0L;
+        var lastPaymentsProcessed = 0L;
+        var lastPaymentsConfirmed = 0L;
+        var lastPaymentsFailed    = 0L;
+
         while (true)
         {
             if (DateTime.Now > nextReport)
             {
-                _logger.LogInformation($"S: {_paymentsGenerated,10:N0} R: {_paymentsProcessed,10:N0} C: {_paymentsConfirmed,10:N0} F: {_paymentsFailed,10:N0}");
+                _logger.LogInformation(
+                    $"S: {_paymentsGenerated-lastPaymentsGenerated,10:N0} " +
+                    $"R: {_paymentsProcessed-lastPaymentsProcessed,10:N0} " +
+                    $"C: {_paymentsConfirmed-lastPaymentsConfirmed,10:N0} " +
+                    $"F: {_paymentsFailed-lastPaymentsFailed,10:N0}"
+                    );
+
                 nextReport = DateTime.Now + TimeSpan.FromSeconds(1);
+
+                lastPaymentsGenerated = _paymentsGenerated;
+                lastPaymentsProcessed = _paymentsProcessed;
+                lastPaymentsConfirmed = _paymentsConfirmed;
+                lastPaymentsFailed    = _paymentsFailed;
             }
             await Task.Delay(1000);
         }
@@ -157,7 +175,9 @@ internal class LoadGenerator : IHostedService
                 var newQueue = new List<Task<PaymentResponse>>();
 
                 lock (_lock)
-                    newQueue = Interlocked.Exchange(ref _responseQueue, newQueue);
+                {
+                    (newQueue, _responseQueue) = (_responseQueue, newQueue);
+                }
 
                 if (newQueue.Count == 0)
                 {
@@ -165,7 +185,7 @@ internal class LoadGenerator : IHostedService
                     continue;
                 }
 
-                var tasks = newQueue.ToList();
+                var tasks = newQueue.Where(x => x != null).ToList();
 
                 while ( tasks.Any() )
                 {
@@ -197,6 +217,19 @@ internal class LoadGenerator : IHostedService
                         }
                         else
                             Interlocked.Increment(ref _paymentsFailed);
+                    }
+                    catch (TaskCanceledException )
+                    {
+                        Interlocked.Increment(ref _paymentsFailed);
+                        // no message - too noisy
+                    }
+                    catch (HttpRequestException httpEx)
+                    {
+                        if ( httpEx.InnerException is IOException )
+                        {
+                            Interlocked.Increment(ref _paymentsFailed);
+                            // no message - too noisy
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -232,7 +265,8 @@ internal class LoadGenerator : IHostedService
 
                 var resp = _client.PayAsync(req);
 
-                _responseQueue.Add(resp);
+                lock (_lock)
+                    _responseQueue.Add(resp);
                 Interlocked.Increment(ref _paymentsGenerated);
             }
             catch (Exception ex)

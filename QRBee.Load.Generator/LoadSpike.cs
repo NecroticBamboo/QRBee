@@ -17,6 +17,7 @@ namespace QRBee.Load.Generator
         private TimeSpan         _spikeDuration;
         private TimeSpan         _spikeDelay;
         private double           _spikeProbability;
+        private bool             _spikeActive;
 
         private ThreadSafeRandom _rng = new();
         private DateTime         _spikeEnd = DateTime.MinValue;
@@ -55,12 +56,21 @@ namespace QRBee.Load.Generator
         {
             if (DateTime.Now > _spikeEnd)
             {
+                if (_spikeActive)
+                {
+                    _spikeActive = false;
+                    _logger.LogWarning($"Anomaly: Load spike ended");
+                }
+
                 var dice = _rng.NextDouble();
                 if (dice < _spikeProbability)
                 {
                     // start load spike
                     _spikeEnd = DateTime.Now + _spikeDuration;
+                    _spikeActive = true;
+
                     _logger.LogWarning($"Anomaly: Load spike until {_spikeEnd} Dice={dice}");
+
                     await Task.Delay(_spikeDelay);
                 }
                 else

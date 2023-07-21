@@ -6,6 +6,7 @@ using QRBee.Api;
 using QRBee.Api.Services;
 using QRBee.Api.Services.Database;
 using QRBee.Core.Security;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,17 +57,18 @@ builder.Services
     .AddSingleton<CustomMetrics>()
     ;
 
+ServicePointManager.DefaultConnectionLimit = 10;
+ServicePointManager.ReusePort = true;
+ServicePointManager.CheckCertificateRevocationList = false;
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
 app.UseOpenTelemetryPrometheusScrapingEndpoint();
-app.UseHttpsRedirection();
+app.UseSwagger();
+app.UseSwaggerUI();
+
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 

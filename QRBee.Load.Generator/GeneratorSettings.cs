@@ -8,6 +8,8 @@ internal class Anomaly
 
 internal class GeneratorSettings
 {
+    public string QRBeeURL              { get; set; } = "http://localhost:5000/";
+    public int DefaultConnectionLimit   { get; set; } = 100;
     public int NumberOfClients          { get; set; } = 100;
     public int NumberOfMerchants        { get; set; } = 10;
     public int NumberOfThreads          { get; set; } = 20;

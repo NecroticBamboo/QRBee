@@ -1,5 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-using log4net;
+﻿using log4net;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -8,6 +7,7 @@ using QRBee.Droid.Services;
 using QRBee.Load.Generator;
 using Microsoft.Extensions.Configuration;
 using System.Net;
+using Microsoft.Extensions.Options;
 
 Console.WriteLine("=== QRBee artificaial load generator ===");
 
@@ -24,7 +24,12 @@ builder.ConfigureServices((context, services) =>
     });
 
     services
-        .AddHttpClient<QRBee.Core.Client.Client, QRBee.Core.Client.Client>(httpClient => new QRBee.Core.Client.Client("https://localhost:7000/", httpClient))
+        .AddHttpClient<QRBee.Core.Client.Client, QRBee.Core.Client.Client>((httpClient,x) => 
+        {
+            var settings = x.GetRequiredService<IOptions<GeneratorSettings>>();
+            var url = settings.Value.QRBeeURL;
+            return new QRBee.Core.Client.Client(url, httpClient); 
+        })
         .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler() { ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator });
         ;
     services
@@ -40,7 +45,9 @@ builder.ConfigureServices((context, services) =>
         ;
 });
 
-ServicePointManager.DefaultConnectionLimit = 500;
+ServicePointManager.DefaultConnectionLimit = 10;
+ServicePointManager.ReusePort = true;
+ServicePointManager.CheckCertificateRevocationList = false;
 
 var host = builder.Build();
 host.Run();
