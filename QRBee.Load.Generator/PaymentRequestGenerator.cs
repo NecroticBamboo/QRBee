@@ -9,31 +9,13 @@ internal class PaymentRequestGenerator
 {
     private readonly ClientPool _clientPool;
     private readonly ILogger<PaymentRequestGenerator> _logger;
-    private ThreadSafeRandom _rng       = new ThreadSafeRandom();
-    private double _minAmount = 1;
-    private double _maxAmount = 100;
-    private double _largeAmountProbability;
-    private double _largeAmountValue;
+    private readonly LargeAmount _largeAmount;
 
-    public PaymentRequestGenerator(ClientPool clientPool, IOptions<GeneratorSettings> settings, ILogger<PaymentRequestGenerator> logger)
+    public PaymentRequestGenerator(ClientPool clientPool, IOptions<GeneratorSettings> settings, ILogger<PaymentRequestGenerator> logger, LargeAmount largeAmount)
     {
         _clientPool = clientPool;
         _logger     = logger;
-        _minAmount  = settings.Value.MinAmount;
-        _maxAmount  = settings.Value.MaxAmount;
-
-        var largeAmount = settings.Value.LargeAmount;
-        _largeAmountProbability = largeAmount.Probability;
-        if (_largeAmountProbability > 0)
-        {
-            if ( largeAmount.Parameters.TryGetValue("Value", out var s))
-                _largeAmountValue = Double.Parse(s);
-        }
-
-        if (_largeAmountValue <= 0.0)
-            _largeAmountProbability = 0.0;
-        else
-            _logger.LogDebug($"Large amount spike configured: Probability={_largeAmountProbability} Value=\"{_largeAmountValue}\"");
+        _largeAmount = largeAmount;
     }
 
     public async Task<PaymentRequest> GeneratePaymentRequest(int clientId, int merchantId)
@@ -79,16 +61,7 @@ internal class PaymentRequestGenerator
         return response;
     }
 
-    private decimal GetAmount()
-    {
-        var dice = _rng.NextDouble();
-        if (dice < _largeAmountProbability)
-        {
-            _logger.LogWarning($"Anomaly: Large amount Dice={dice}");
-            return Convert.ToDecimal(_rng.NextDoubleInRange(_largeAmountValue, _largeAmountValue* 1.10));
-        }
-        return Convert.ToDecimal(_rng.NextDoubleInRange(_minAmount, _maxAmount));
-    }
+    private decimal GetAmount() => _largeAmount.GetAmount();
 
     private Task<ClientSettings> GetMerchant(int id) => _clientPool.GetMerchant(id);
 

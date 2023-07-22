@@ -3,6 +3,7 @@
 internal class Anomaly
 {
     public double Probability { get; set; }
+    public TimeSpan Duration  { get; set; }
     public Dictionary<string,string> Parameters  { get; set; } = new();
 }
 

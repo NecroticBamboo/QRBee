@@ -39,15 +39,18 @@ builder.ConfigureServices((context, services) =>
         .AddSingleton<TransactionDefiler>()
         .AddSingleton<UnconfirmedTransactions>()
         .AddSingleton<LoadSpike>()
+        .AddSingleton<LargeAmount>()
+        .AddSingleton<IAnomalyReporter, AnomalyReporter>()
         .AddSingleton<PrivateKeyHandlerFactory>(x => no => new PrivateKeyHandler(x.GetRequiredService<ILogger<ServerPrivateKeyHandler>>(), x.GetRequiredService<IConfiguration>(), no))
         .AddSingleton<SecurityServiceFactory>(x => no => new AndroidSecurityService(x.GetRequiredService<PrivateKeyHandlerFactory>()(no)))
         .AddHostedService<LoadGenerator>()
         ;
 });
 
-ServicePointManager.DefaultConnectionLimit = 10;
+// ServicePointManager.DefaultConnectionLimit = 500;
 ServicePointManager.ReusePort = true;
 ServicePointManager.CheckCertificateRevocationList = false;
+
 
 var host = builder.Build();
 host.Run();
