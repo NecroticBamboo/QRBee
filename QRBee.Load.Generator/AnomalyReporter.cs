@@ -23,6 +23,7 @@ namespace QRBee.Load.Generator
             if (writeHeader)
             {
                 _writer.WriteLine("Start,End,Label");
+                _writer.Flush();
             }
         }
 

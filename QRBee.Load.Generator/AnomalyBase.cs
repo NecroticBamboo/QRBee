@@ -44,7 +44,7 @@ internal class AnomalyBase
                 if (_anomalyActive)
                 {
                     _anomalyActive = false;
-                    _anomalyReporter.Report(_anomalyStart, _anomalyEnd, "Unconfirmed transaction");
+                    // _anomalyReporter.Report(_anomalyStart, _anomalyEnd, "Unconfirmed transaction");
                     _logger.LogWarning($"Anomaly:{Name} ended");
                 }
             }
@@ -61,6 +61,7 @@ internal class AnomalyBase
                     _anomalyEnd    = _anomalyStart + _anomalyDuration;
                     _anomalyActive = true;
                     _logger.LogWarning($"Anomaly: {Name}. Dice={dice} Ends=\"{_anomalyEnd.ToLocalTime():s}\"");
+                    _anomalyReporter.Report(_anomalyStart, _anomalyEnd, $"{Name}");
                 }
             }
             return true;
