@@ -9,6 +9,7 @@ namespace QRBee.Api.Services
         private Counter<int>  SucceededTransactionsCounter         { get; }
         private Counter<int>  FailedTransactionsCounter            { get; }
         private Counter<int>  CorruptTransactionsCounter           { get; }
+        private Counter<int>  CancelledTransactionsCounter         { get; }
         private Counter<int>  SucceededPaymentConfirmationsCounter { get; }
         private Counter<int>  FailedPaymentConfirmationsCounter    { get; }
         private Counter<long> TotalCreditCardCheckTime             { get; }
@@ -29,6 +30,7 @@ namespace QRBee.Api.Services
             SucceededTransactionsCounter         = meter.CreateCounter<int>("transaction-succeeded", description: "Transaction succeeded");
             FailedTransactionsCounter            = meter.CreateCounter<int>("transaction-failed", description: "Transaction failed");
             CorruptTransactionsCounter           = meter.CreateCounter<int>("transaction-corrupt", description: "Transaction was corrupted");
+            CancelledTransactionsCounter         = meter.CreateCounter<int>("transaction-cancelled", description: "Transaction was cancelled by TransactionMonitoring class");
 
             SucceededPaymentConfirmationsCounter = meter.CreateCounter<int>("payment-confirmation-succeeded", description: "Payment confirmation succeeded");
             FailedPaymentConfirmationsCounter    = meter.CreateCounter<int>("payment-confirmation-failed", description: "Payment confirmation failed");
@@ -47,6 +49,7 @@ namespace QRBee.Api.Services
         public void AddSucceededTransaction()                      => SucceededTransactionsCounter.Add(1);
         public void AddFailedTransaction()                         => FailedTransactionsCounter.Add(1);
         public void AddCorruptTransaction()                        => CorruptTransactionsCounter.Add(1);
+        public void AddCancelledTransaction()                      => CancelledTransactionsCounter.Add(1);
         public void AddSucceededPaymentConfirmation()              => SucceededPaymentConfirmationsCounter.Add(1);
         public void AddFailedPaymentConfirmation()                 => FailedPaymentConfirmationsCounter.Add(1);
         public void AddTotalCreditCardCheckTime(long milliseconds) => TotalCreditCardCheckTime.Add(milliseconds);

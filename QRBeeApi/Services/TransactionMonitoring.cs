@@ -7,16 +7,20 @@ namespace QRBee.Api.Services
         private readonly IStorage _storage;
         private readonly IPaymentGateway _paymentGateway;
         private readonly ILogger<TransactionMonitoring> _logger;
-        private const double Minutes = 5;
+        private const double Minutes = 2;
+        private const double Seconds = 30;
 
         private static bool _started;
         private static object _syncObject = new();
 
-        public TransactionMonitoring(IStorage storage, IPaymentGateway paymentGateway, ILogger<TransactionMonitoring> logger)
+        private readonly CustomMetrics _customMetrics;
+
+        public TransactionMonitoring(IStorage storage, IPaymentGateway paymentGateway, ILogger<TransactionMonitoring> logger, CustomMetrics metrics)
         {
             _storage = storage;
             _paymentGateway = paymentGateway;
             _logger = logger;
+            _customMetrics = metrics;
 
             if (_started) 
                 return;
@@ -37,7 +41,7 @@ namespace QRBee.Api.Services
             while (true)
             {
                 await CheckTransactions();
-                await Task.Delay(TimeSpan.FromMinutes(Minutes));
+                await Task.Delay(TimeSpan.FromSeconds(Seconds));
             }
         }
 
@@ -50,11 +54,12 @@ namespace QRBee.Api.Services
             {
                 if (transaction.ServerTimeStamp + TimeSpan.FromMinutes(Minutes) > DateTime.UtcNow)
                 {
-                    _logger.LogDebug($"Transaction: {transaction.MerchantTransactionId} should not be cancelled yet (ServerTimeStamp: {transaction.ServerTimeStamp:O}, Now: {DateTime.UtcNow:O})");
+                    // _logger.LogDebug($"Transaction: {transaction.MerchantTransactionId} should not be cancelled yet (ServerTimeStamp: {transaction.ServerTimeStamp:O}, Now: {DateTime.UtcNow:O})");
                     continue;
                 }
 
                 _logger.LogDebug($"Cancelling transaction: {transaction.MerchantTransactionId}...");
+                
                 await CancelTransaction(transaction);
             }
         }
@@ -74,6 +79,7 @@ namespace QRBee.Api.Services
             }
 
             transaction.Status = TransactionInfo.TransactionStatus.Cancelled;
+            _customMetrics.AddCancelledTransaction();
             await _storage.UpdateTransaction(transaction);
         }
     }
