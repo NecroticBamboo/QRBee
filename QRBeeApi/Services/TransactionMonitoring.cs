@@ -7,8 +7,9 @@ namespace QRBee.Api.Services
         private readonly IStorage _storage;
         private readonly IPaymentGateway _paymentGateway;
         private readonly ILogger<TransactionMonitoring> _logger;
-        private const double Minutes = 2;
-        private const double Seconds = 30;
+
+        private const double TransactionInactivityMinutes = 1;
+        private const double LoopIntervalSeconds = 5;
 
         private static bool _started;
         private static object _syncObject = new();
@@ -41,7 +42,7 @@ namespace QRBee.Api.Services
             while (true)
             {
                 await CheckTransactions();
-                await Task.Delay(TimeSpan.FromSeconds(Seconds));
+                await Task.Delay(TimeSpan.FromSeconds(LoopIntervalSeconds));
             }
         }
 
@@ -52,7 +53,7 @@ namespace QRBee.Api.Services
 
             foreach (var transaction in list)
             {
-                if (transaction.ServerTimeStamp + TimeSpan.FromMinutes(Minutes) > DateTime.UtcNow)
+                if (transaction.ServerTimeStamp + TimeSpan.FromMinutes(TransactionInactivityMinutes) > DateTime.UtcNow)
                 {
                     // _logger.LogDebug($"Transaction: {transaction.MerchantTransactionId} should not be cancelled yet (ServerTimeStamp: {transaction.ServerTimeStamp:O}, Now: {DateTime.UtcNow:O})");
                     continue;
@@ -75,12 +76,15 @@ namespace QRBee.Api.Services
                 _logger.LogError(e, $"Transaction: {transaction.MerchantTransactionId} can't be cancelled: {e.Message}");
                 transaction.Status = TransactionInfo.TransactionStatus.CancelFailed;
                 await _storage.UpdateTransaction(transaction);
+
+                _customMetrics.AddFailedTransactionCancellation();
                 return;
             }
 
             transaction.Status = TransactionInfo.TransactionStatus.Cancelled;
-            _customMetrics.AddCancelledTransaction();
             await _storage.UpdateTransaction(transaction);
+
+            _customMetrics.AddCancelledTransaction();
         }
     }
 }

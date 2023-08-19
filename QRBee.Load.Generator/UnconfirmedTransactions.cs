@@ -10,5 +10,5 @@ internal class UnconfirmedTransactions : AnomalyBase
     {
     }
 
-    public bool ShouldConfirm() => IsActive();
+    public bool ShouldConfirm() => !IsActive();
 }

@@ -14,6 +14,11 @@ internal class AnomalyBase
     private TimeSpan                  _anomalyDuration;
     private readonly object           _lock         = new();
 
+    public static bool OneAtATime { get; set; }  = true;
+    protected static bool OneIsActive            = false;
+    protected static readonly object _globalLock = new();
+
+
     public string Name { get; }
 
     public AnomalyBase(string name, Anomaly settings, ILogger logger, IAnomalyReporter anomalyReporter)
@@ -46,6 +51,12 @@ internal class AnomalyBase
                     _anomalyActive = false;
                     _anomalyReporter.Report(_anomalyStart, _anomalyEnd, Name);
                     _logger.LogWarning($"Anomaly:{Name} ended");
+
+                    lock(_globalLock)
+                    {
+                        if ( OneAtATime )
+                            OneIsActive = false;
+                    }
                 }
             }
         }
@@ -57,11 +68,18 @@ internal class AnomalyBase
             {
                 if (!_anomalyActive)
                 {
-                    _anomalyStart  = DateTime.Now;
+                    lock (_globalLock)
+                    {
+                        if (OneAtATime && OneIsActive)
+                            return false;
+                        if (OneAtATime)
+                            OneIsActive = true;
+                    }
+
+                    _anomalyStart = DateTime.Now;
                     _anomalyEnd    = _anomalyStart + _anomalyDuration;
                     _anomalyActive = true;
                     _logger.LogWarning($"Anomaly: {Name}. Dice={dice} Ends=\"{_anomalyEnd.ToLocalTime():s}\"");
-                    //_anomalyReporter.Report(_anomalyStart, _anomalyEnd, $"{Name}");
                 }
             }
             return true;

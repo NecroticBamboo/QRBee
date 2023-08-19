@@ -36,16 +36,17 @@ internal class PaymentGateway : IPaymentGateway
     {
         if (!string.IsNullOrWhiteSpace(info.GatewayTransactionId))
         {
-            _logger.LogInformation($"Transaction with id: {info.Id} was cancelled");
+            var m = "Either payment gateway isn't working or the transaction is old";
+            _logger.LogError($"Transaction with id: {info.Id} was not cancelled: {m}");
             return Task.FromResult(new GatewayResponse
             {
                 Success = false,
-                ErrorMessage = "Either payment gateway isn't working or the transaction is old",
+                ErrorMessage = m,
                 GatewayTransactionId = info.GatewayTransactionId
             });
         }
 
-        _logger.LogInformation($"Transaction with id: {info.Id} succeeded");
+        _logger.LogInformation($"Transaction with id: {info.Id} was cancelled");
         return Task.FromResult(new GatewayResponse
         {
             Success = true,
